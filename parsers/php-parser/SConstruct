@@ -1,0 +1,35 @@
+import os
+from SCons.Errors import StopError 
+
+env = DefaultEnvironment()
+
+AddOption('--with-php', dest='php_root', action='store', metavar='PATH',
+          help='Path to PHP interpreter source containing zend_language_parser.y')
+
+env.VariantDir('build', 'src')
+
+php_root = GetOption('php_root')
+if not php_root or not os.path.isdir(php_root):
+    raise StopError('PHP source directory was not provided. Use --with-php')
+
+# Copy YACC file from original PHP interpreter and build it
+zend_language_parser_y = env.Command('build/zend_language_parser.y', 
+                                     os.path.join(php_root, 'Zend', 'zend_language_parser.y'),
+                                     Copy("$TARGET", "$SOURCE"))
+
+# FIXME: If Bison/YACC/Re2C are not installed, this fails with exception -- print nice error message
+zend_language_parser_c = env.CFile(source = zend_language_parser_y, 
+                                   target = ['build/zend_language_parser.c',
+                                             'build/zend_language_parser.h'])
+zend_language_scanner_c = env.CFile(source = 'build/zend_language_scanner.re2c',
+                                    target = ['build/zend_language_scanner.c',
+                                              'build/zend_language_scanner_defs.h'])
+
+env.Append(CPPPATH = ['include/', 'build/'])
+env.Append(CFLAGS = ['-Werror-implicit-function-declaration'])
+env.Append(YACCFLAGS = ['--defines=build/zend_language_parser.h'])
+env.Append(RE2CFLAGS = ['--case-inverted', '-cbF', '-t', 'build/zend_language_scanner_defs.h'])
+
+env.Program(target = 'build/salsa3-php-parser', 
+            source = Glob('build/*.c') + zend_language_scanner_c + \
+                     zend_language_parser_c)
