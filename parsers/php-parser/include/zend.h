@@ -9,6 +9,8 @@
 #define ZEND_H_
 
 #include <stdlib.h>
+#include <string.h>
+#include <stdarg.h>
 
 /* Hide various macro definitions */
 
@@ -18,6 +20,19 @@
 #define TSRMLS_C
 #define TSRMLS_DC
 #define TSRMLS_CC
+
+#define BEGIN_EXTERN_C()
+#define END_EXTERN_C()
+
+#define zend_always_inline
+
+
+#define ZEND_MMAP_AHEAD 	32
+
+typedef enum {
+  SUCCESS =  0,
+  FAILURE = -1,		/* this MUST stay a negative number, or it may affect functions! */
+} ZEND_RESULT_CODE;
 
 typedef unsigned char zend_uchar;
 typedef unsigned int zend_uint;
@@ -207,5 +222,44 @@ typedef unsigned long zend_ulong;
 #define IS_CALLABLE			10
 #define IS_CONSTANT_ARRAY	11
 
+static void* emalloc(size_t sz) {
+	return malloc(sz);
+}
+
+static void efree(void* ptr) {
+	free(ptr);
+}
+
+static void* erealloc(void* ptr, size_t sz) {
+	return realloc(ptr, sz);
+}
+
+static void pefree(void* ptr, int _unused) {
+	free(ptr);
+}
+
+static void* perealloc(void* ptr, size_t sz, int _unused) {
+	return realloc(ptr, sz);
+}
+
+static inline const void *zend_memrchr(const void *s, int c, size_t n)
+{
+	register const unsigned char *e;
+
+	if (n <= 0) {
+		return NULL;
+	}
+
+	for (e = (const unsigned char *)s + n - 1; e >= (const unsigned char *)s; e--) {
+		if (*e == (const unsigned char)c) {
+			return (const void *)e;
+		}
+	}
+
+	return NULL;
+}
+
 #endif /* ZEND_H_ */
+
+
 

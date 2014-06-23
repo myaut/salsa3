@@ -25,14 +25,17 @@ typedef struct _zend_compiler_globals {
 
 	int short_tags;
 	int asp_tags;
+
 	int increment_lineno;
+
+	int doc_comment_len;
 } zend_compiler_globals;
 
 extern zend_compiler_globals cg;
 #define CG(member)			(cg).member
 
 /* Some stubs for Zend Compiler */
-void zend_error(int error, const char* msg);
+void zend_error(int error, const char* msg, ...);
 
 static void yyerror(const char* msg) {
 	zend_error(E_PARSE, msg);
@@ -45,9 +48,6 @@ static void yyerror(const char* msg) {
 extern char* yy_text;
 extern size_t yy_leng;
 
-/* Stubs for zend_yytnamerr that is never used */
-static const void* zend_memrchr(const void* ptr, int chr, size_t len) { return ptr; }
-
 #define HANDLE_INTERACTIVE()
 #define DO_TICKS()
 #define TSRMLS_FETCH()
@@ -55,14 +55,6 @@ static const void* zend_memrchr(const void* ptr, int chr, size_t len) { return p
 
 #define STR_EMPTY_ALLOC() estrndup("", sizeof("")-1)
 char* estrndup(const char* str, size_t sz);
-
-static void* emalloc(size_t sz) {
-	return malloc(sz);
-}
-
-static void efree(void* ptr) {
-	free(ptr);
-}
 
 /* ZVAL API */
 

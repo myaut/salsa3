@@ -7,7 +7,36 @@
 #include "zend_compile.h"
 #include "zend_language_parser.h"
 
+#include <stdio.h>
+
 zend_compiler_globals cg;
+
+
+#ifdef SALSA3_PHP_DEBUG
+int token_debug;
+#endif
+
+static void salsa3_preamble(const char* state) {
+	printf("{\"lineno\": %d, \"state\": \"%s\" ",
+				CG(zend_lineno), state);
+}
+
+static void _salsa3_dump_int_param(const char* name, int param) {
+	printf(", '%s': %d", name, param);
+}
+
+static void _salsa3_dump_znode(const char* name, const znode* arg) {
+	printf(", \"%s\" : {\"addr\": \"%p\", \"op_type\" : %d }", name, arg, arg->op_type);
+}
+
+static void salsa3_end() {
+	fputc('}\n', stdout);
+}
+
+#define salsa3_dump_int_param(param) _salsa3_dump_int_param(#param, param)
+#define salsa3_dump_znode(node) _salsa3_dump_znode(#node, node)
+
+/* Zend compiler code  */
 
 void zend_init_compiler_context(TSRMLS_D) /* {{{ */
 {
@@ -24,8 +53,10 @@ void zend_init_compiler_data_structures(TSRMLS_D) /* {{{ */
 	cg.active_op_array = -1;
 	cg.parse_error = 0;
 
-	cg.asp_tags = 0;
-	cg.short_tags = 0;
+	cg.asp_tags = 1;
+	cg.short_tags = 1;
+
+	cg.doc_comment_len = 0;
 }
 /* }}} */
 
@@ -104,6 +135,12 @@ int zend_add_const_name_literal(zend_op_array *op_array, const zval *zv, int unq
 
 void zend_do_binary_op(zend_uchar op, znode *result, const znode *op1, const znode *op2 TSRMLS_DC) /* {{{ */
 {
+	salsa3_preamble("binary_op");
+	salsa3_dump_int_param(op);
+	salsa3_dump_znode(result);
+	salsa3_dump_znode(op1);
+	salsa3_dump_znode(op2);
+	salsa3_end();
 
 }
 /* }}} */
@@ -164,7 +201,9 @@ void zend_do_print(znode *result, const znode *arg TSRMLS_DC) /* {{{ */
 
 void zend_do_echo(const znode *arg TSRMLS_DC) /* {{{ */
 {
-
+	salsa3_preamble("echo");
+	salsa3_dump_znode(arg);
+	salsa3_end();
 }
 /* }}} */
 
@@ -181,18 +220,6 @@ void zend_do_assign(znode *result, znode *variable, znode *value TSRMLS_DC) /* {
 /* }}} */
 
 void zend_do_assign_ref(znode *result, const znode *lvar, const znode *rvar TSRMLS_DC) /* {{{ */
-{
-
-}
-/* }}} */
-
-static inline void do_begin_loop(TSRMLS_D) /* {{{ */
-{
-
-}
-/* }}} */
-
-static inline void do_end_loop(int cont_addr, int has_loop_var TSRMLS_DC) /* {{{ */
 {
 
 }
@@ -1017,6 +1044,11 @@ void zend_verify_namespace(TSRMLS_D) /* {{{ */
 }
 /* }}} */
 
+void zend_do_build_namespace_name(znode *result, znode *prefix, znode *name TSRMLS_DC) /* {{{ */
+{
+
+}
+
 void zend_do_end_namespace(TSRMLS_D) /* {{{ */
 {
 
@@ -1040,6 +1072,12 @@ int yylex(znode* zendlval TSRMLS_DC) {
 again:
 	Z_TYPE(zendlval->u.constant) = IS_LONG;
 	retval = lex_scan(&zendlval->u.constant TSRMLS_CC);
+
+#ifdef SALSA3_PHP_DEBUG
+	if(token_debug)
+		fprintf(stderr, "\t-> token %d\n", retval);
+#endif
+
 	switch (retval) {
 		case T_COMMENT:
 		case T_DOC_COMMENT:
