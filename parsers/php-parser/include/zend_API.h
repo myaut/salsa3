@@ -29,6 +29,8 @@ typedef struct _zend_compiler_globals {
 	int increment_lineno;
 
 	int doc_comment_len;
+
+	unsigned long zend_nodeid;
 } zend_compiler_globals;
 
 extern zend_compiler_globals cg;
@@ -63,11 +65,13 @@ char* estrndup(const char* str, size_t sz);
 #define Z_DVAL(zval)			(zval).value.dval
 #define Z_STRVAL(zval)			(zval).value.str.val
 #define Z_STRLEN(zval)			(zval).value.str.len
+#define Z_STRISESC(zval)			(zval).value.str.is_escaped
 
 #define Z_TYPE(zval)		(zval).type
 
 #define Z_STRVAL_P(zval)			(*zval).value.str.val
 #define Z_STRLEN_P(zval)			(*zval).value.str.len
+#define Z_STRISESC_P(zval)			(*zval).value.str.is_escaped
 
 #define ZVAL_LONG(z, l) {			\
 		zval *__z = (z);			\
@@ -82,17 +86,23 @@ char* estrndup(const char* str, size_t sz);
 		Z_STRVAL(*__z) = (duplicate ? 			\
 						  estrndup(__s, __l) : 	\
 						  (char*)__s);			\
+		Z_STRISESC_P(__z) = 1;					\
 		Z_TYPE(*__z) = IS_STRING;				\
 	} while (0)
 
-#define ZVAL_EMPTY_STRING(z) do {	\
-		zval *__z = (z);			\
-		Z_STRLEN(*__z) = 0;		\
-		Z_STRVAL(*__z) = STR_EMPTY_ALLOC();\
-		Z_TYPE(*__z) = IS_STRING;	\
+#define ZVAL_EMPTY_STRING(z) do {				\
+		zval *__z = (z);						\
+		Z_STRLEN(*__z) = 0;						\
+		Z_STRVAL(*__z) = STR_EMPTY_ALLOC();		\
+		Z_STRISESC_P(__z) = 1;					\
+		Z_TYPE(*__z) = IS_STRING;				\
 	} while (0)
 
-#define INIT_PZVAL(zval)
+#define INIT_PZVAL(zv)							\
+	do {										\
+		(zv)->token = (char*) 0;				\
+		Z_TYPE(*(zv)) = IS_UNKNOWN_ZVAL;		\
+	} while (0)
 
 typedef union _zvalue_value {
 	long lval;					/* long value */
@@ -100,6 +110,7 @@ typedef union _zvalue_value {
 	struct {
 		char *val;
 		int len;
+		int is_escaped;
 	} str;
 
 #if 0
@@ -155,6 +166,7 @@ typedef union _znode_op {
 
 
 typedef struct _znode {
+	int nodeid;
 	int op_type;
 	union {
 		znode_op op;

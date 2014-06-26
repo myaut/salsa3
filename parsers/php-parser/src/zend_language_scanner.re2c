@@ -841,6 +841,7 @@ inline_html:
 
 	Z_STRVAL_P(zendlval) = (char *) estrndup(yytext, yyleng);
 	Z_STRLEN_P(zendlval) = yyleng;
+	Z_STRISESC_P(zendlval) = 0;
 	
 	zendlval->type = IS_STRING;
 	HANDLE_NEWLINES(yytext, yyleng);
@@ -971,14 +972,15 @@ inline_html:
 }
 
 
-<ST_IN_SCRIPTING>b?['] {
+<ST_IN_SCRIPTING>b?['"] {
 	register char *s, *t;
 	char *end;
-	int bprefix = (yytext[0] != '\'') ? 1 : 0;
+	int quote = *(YYCURSOR - 1);
+	int bprefix = (yytext[0] != quote) ? 1 : 0;
 
 	while (1) {
 		if (YYCURSOR < YYLIMIT) {
-			if (*YYCURSOR == '\'') {
+			if (*YYCURSOR == quote) {
 				YYCURSOR++;
 				yyleng = YYCURSOR - SCNG(yy_text);
 
@@ -999,47 +1001,6 @@ inline_html:
 	ZVAL_STRINGL(zendlval, yytext+bprefix+1, yyleng-bprefix-2, 1);
 
 	return T_CONSTANT_ENCAPSED_STRING;
-}
-
-
-<ST_IN_SCRIPTING>b?["] {
-	int bprefix = (yytext[0] != '"') ? 1 : 0;
-
-	while (YYCURSOR < YYLIMIT) {
-		switch (*YYCURSOR++) {
-			case '"':
-				yyleng = YYCURSOR - SCNG(yy_text);				
-				return T_CONSTANT_ENCAPSED_STRING;
-			case '$':
-				if (IS_LABEL_START(*YYCURSOR) || *YYCURSOR == '{') {
-					break;
-				}
-				continue;
-			case '{':
-				if (*YYCURSOR == '$') {
-					break;
-				}
-				continue;
-			case '\\':
-				if (YYCURSOR < YYLIMIT) {
-					YYCURSOR++;
-				}
-				/* fall through */
-			default:
-				continue;
-		}
-
-		YYCURSOR--;
-		break;
-	}
-
-	/* Remember how much was scanned to save rescanning */
-	SET_DOUBLE_QUOTES_SCANNED_LENGTH(YYCURSOR - SCNG(yy_text) - yyleng);
-
-	YYCURSOR = SCNG(yy_text) + yyleng;
-
-	BEGIN(ST_DOUBLE_QUOTES);
-	return '"';
 }
 
 
@@ -1110,114 +1071,11 @@ inline_html:
 	return T_END_HEREDOC;
 }
 
-
-<ST_DOUBLE_QUOTES,ST_BACKQUOTE,ST_HEREDOC>"{$" {
-	Z_LVAL(*zendlval) = (long) '{';
-	yy_push_state(ST_IN_SCRIPTING TSRMLS_CC);
-	yyless(1);
-	return T_CURLY_OPEN;
-}
-
-
-<ST_DOUBLE_QUOTES>["] {
-	BEGIN(ST_IN_SCRIPTING);
-	return '"';
-}
-
 <ST_BACKQUOTE>[`] {
 	BEGIN(ST_IN_SCRIPTING);
 	return '`';
 }
 
-
-<ST_DOUBLE_QUOTES>{ANY_CHAR} {
-	if (GET_DOUBLE_QUOTES_SCANNED_LENGTH()) {
-		YYCURSOR += GET_DOUBLE_QUOTES_SCANNED_LENGTH() - 1;
-		SET_DOUBLE_QUOTES_SCANNED_LENGTH(0);
-
-		goto double_quotes_scan_done;
-	}
-
-	if (YYCURSOR > YYLIMIT) {
-		return 0;
-	}
-	if (yytext[0] == '\\' && YYCURSOR < YYLIMIT) {
-		YYCURSOR++;
-	}
-
-	while (YYCURSOR < YYLIMIT) {
-		switch (*YYCURSOR++) {
-			case '"':
-				break;
-			case '$':
-				if (IS_LABEL_START(*YYCURSOR) || *YYCURSOR == '{') {
-					break;
-				}
-				continue;
-			case '{':
-				if (*YYCURSOR == '$') {
-					break;
-				}
-				continue;
-			case '\\':
-				if (YYCURSOR < YYLIMIT) {
-					YYCURSOR++;
-				}
-				/* fall through */
-			default:
-				continue;
-		}
-
-		YYCURSOR--;
-		break;
-	}
-
-double_quotes_scan_done:
-	yyleng = YYCURSOR - SCNG(yy_text);
-
-	return T_ENCAPSED_AND_WHITESPACE;
-}
-
-
-<ST_BACKQUOTE>{ANY_CHAR} {
-	if (YYCURSOR > YYLIMIT) {
-		return 0;
-	}
-	if (yytext[0] == '\\' && YYCURSOR < YYLIMIT) {
-		YYCURSOR++;
-	}
-
-	while (YYCURSOR < YYLIMIT) {
-		switch (*YYCURSOR++) {
-			case '`':
-				break;
-			case '$':
-				if (IS_LABEL_START(*YYCURSOR) || *YYCURSOR == '{') {
-					break;
-				}
-				continue;
-			case '{':
-				if (*YYCURSOR == '$') {
-					break;
-				}
-				continue;
-			case '\\':
-				if (YYCURSOR < YYLIMIT) {
-					YYCURSOR++;
-				}
-				/* fall through */
-			default:
-				continue;
-		}
-
-		YYCURSOR--;
-		break;
-	}
-
-	yyleng = YYCURSOR - SCNG(yy_text);
-
-	return T_ENCAPSED_AND_WHITESPACE;
-}
 
 
 <ST_HEREDOC>{ANY_CHAR} {

@@ -25,7 +25,7 @@ void zend_error(int error, const char* msg, ...) {
 	exit(1);
 }
 
-static int read_php_file(const char* path, char** pdata, size_t** psize) {
+static int read_php_file(const char* path, char** pdata, size_t* psize) {
 	FILE* yyin;
 	size_t yysize;
 	char* yydata;
