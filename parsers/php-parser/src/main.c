@@ -82,6 +82,7 @@ int main(int argc, char* argv[]) {
 	}
 
 	yy_scanner_init();
+	zend_init_compiler_context();
 	yy_scan_buffer(yydata, yysize);
 
 	yyparse();

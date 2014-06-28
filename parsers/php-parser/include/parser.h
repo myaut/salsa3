@@ -15,4 +15,6 @@ void yyparse(void);
 
 void yy_scan_buffer(char *str, unsigned int len);
 
+void zend_init_compiler_context(void);
+
 #endif /* PARSER_H_ */

@@ -785,6 +785,7 @@ NEWLINE ("\r"|"\n"|"\r\n")
 
 
 <INITIAL>"<?" {
+	YYDEBUGEX("short_tags=%d\n", CG(short_tags));
 	if (CG(short_tags)) {
 		ZVAL_STRINGL(zendlval, yytext, yyleng, 0); /* no copying - intentional */
 		BEGIN(ST_IN_SCRIPTING);

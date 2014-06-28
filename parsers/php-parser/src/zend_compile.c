@@ -54,7 +54,7 @@ static void escaped_print_string(const char* str, int is_escaped) {
 	}
 }
 
-static void salsa3_preamble(const char* state) {
+static void salsa3_begin(const char* state) {
 	printf("{\"lineno\": %d, \"state\": \"%s\" ",
 				CG(zend_lineno), state);
 }
@@ -64,18 +64,15 @@ static void _salsa3_dump_int_param(const char* name, int param) {
 }
 
 static void _salsa3_dump_znode(const char* name, const znode* arg) {
+	if(arg == NULL)
+		return;
+
 	printf(", \"%s\" : {\"nodeid\": %lu", name, arg->nodeid);
 
 	if(arg->op_type == IS_CONST) {
 		const zval* zv = &arg->u.constant;
 
 		switch(zv->type) {
-		case IS_STRING:
-		case IS_CONSTANT:
-			fputs(", \"value\": \"", stdout);
-			escaped_print_string(Z_STRVAL_P(zv), Z_STRISESC_P(zv));
-			fputc('\"', stdout);
-			break;
 		case IS_LONG:
 			if(zv->token != NULL)
 				printf(", \"value\": \"%s\"", zv->token);
@@ -88,10 +85,15 @@ static void _salsa3_dump_znode(const char* name, const znode* arg) {
 			else
 				printf(", \"value\": \"%e\"", Z_DVAL(*zv));
 			break;
-		default:
-			printf(", \"type\": %d", zv->type);
+		case IS_STRING:
+		case IS_CONSTANT:
+			fputs(", \"value\": \"", stdout);
+			escaped_print_string(Z_STRVAL_P(zv), Z_STRISESC_P(zv));
+			fputc('\"', stdout);
 			break;
 		}
+
+		printf(", \"type\": %d", zv->type);
 	}
 
 	fputs("}", stdout);
@@ -113,12 +115,6 @@ static void salsa3_end() {
 /* Zend compiler code  */
 
 void zend_init_compiler_context(TSRMLS_D) /* {{{ */
-{
-
-}
-/* }}} */
-
-void zend_init_compiler_data_structures(TSRMLS_D) /* {{{ */
 {
 	cg.zend_lineno = 0;
 	cg.increment_lineno = 0;
@@ -181,13 +177,12 @@ int zend_add_const_name_literal(zend_op_array *op_array, const zval *zv, int unq
 
 void zend_do_binary_op(zend_uchar op, znode *result, const znode *op1, const znode *op2 TSRMLS_DC) /* {{{ */
 {
-	salsa3_preamble("binary_op");
+	salsa3_begin("binary_op");
 	salsa3_dump_int_param(op);
 	salsa3_dump_znode(result);
 	salsa3_dump_znode(op1);
 	salsa3_dump_znode(op2);
 	salsa3_end();
-
 }
 /* }}} */
 
@@ -205,13 +200,22 @@ void zend_do_binary_assign_op(zend_uchar op, znode *result, const znode *op1, co
 
 void fetch_simple_variable_ex(znode *result, znode *varname, int bp, zend_uchar op TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("fetch_simple_variable_ex");
+	salsa3_dump_int_param(bp);
+	salsa3_dump_int_param(op);
+	salsa3_dump_znode(result);
+	salsa3_dump_znode(varname);
+	salsa3_end();
 }
 /* }}} */
 
 void fetch_simple_variable(znode *result, znode *varname, int bp TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("fetch_simple_variable");
+	salsa3_dump_int_param(bp);
+	salsa3_dump_znode(result);
+	salsa3_dump_znode(varname);
+	salsa3_end();
 }
 /* }}} */
 
@@ -229,7 +233,11 @@ void fetch_array_begin(znode *result, znode *varname, znode *first_dim TSRMLS_DC
 
 void fetch_array_dim(znode *result, const znode *parent, const znode *dim TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("array_dim");
+	salsa3_dump_znode(result);
+	salsa3_dump_znode(parent);
+	salsa3_dump_znode(dim);
+	salsa3_end();
 }
 /* }}} */
 
@@ -247,7 +255,7 @@ void zend_do_print(znode *result, const znode *arg TSRMLS_DC) /* {{{ */
 
 void zend_do_echo(const znode *arg TSRMLS_DC) /* {{{ */
 {
-	salsa3_preamble("echo");
+	salsa3_begin("echo");
 	salsa3_dump_znode(arg);
 	salsa3_end();
 }
@@ -261,7 +269,11 @@ void zend_do_abstract_method(const znode *function_name, znode *modifiers, const
 
 void zend_do_assign(znode *result, znode *variable, znode *value TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("assign");
+	salsa3_dump_znode(result);
+	salsa3_dump_znode(variable);
+	salsa3_dump_znode(value);
+	salsa3_end();
 }
 /* }}} */
 
@@ -315,37 +327,51 @@ void zend_do_post_incdec(znode *result, const znode *op1, zend_uchar op TSRMLS_D
 
 void zend_do_if_cond(const znode *cond, znode *closing_bracket_token TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("if_cond");
+	salsa3_dump_znode(cond);
+	salsa3_dump_znode(closing_bracket_token);
+	salsa3_end();
 }
 /* }}} */
 
 void zend_do_if_after_statement(const znode *closing_bracket_token, unsigned char initialize TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("if_after");
+	salsa3_dump_int_param(initialize);
+	salsa3_dump_znode(closing_bracket_token);
+	salsa3_end();
 }
 /* }}} */
 
 void zend_do_if_end(TSRMLS_D) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("if_end");
+	salsa3_end();
 }
 /* }}} */
 
 void zend_check_writable_variable(const znode *variable) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("check_writable_variable");
+	salsa3_dump_znode(variable);
+	salsa3_end();
 }
 /* }}} */
 
 void zend_do_begin_variable_parse(TSRMLS_D) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("begin_variable_parse");
+	salsa3_end();
 }
 /* }}} */
 
 void zend_do_end_variable_parse(znode *variable, int type, int arg_offset TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("end_variable_parse");
+	salsa3_dump_int_param(type);
+	salsa3_dump_int_param(arg_offset);
+	salsa3_dump_znode(variable);
+	salsa3_end();
 }
 /* }}} */
 
@@ -363,7 +389,9 @@ void zend_do_add_variable(znode *result, const znode *op1, const znode *op2 TSRM
 
 void zend_do_free(znode *op1 TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("free");
+	salsa3_dump_znode(op1);
+	salsa3_end();
 }
 /* }}} */
 
@@ -375,7 +403,13 @@ int zend_do_verify_access_types(const znode *current_access_type, const znode *n
 
 void zend_do_begin_function_declaration(znode *function_token, znode *function_name, int is_method, int return_reference, znode *fn_flags_znode TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("begin_function_declaration");
+	salsa3_dump_int_param(is_method);
+	salsa3_dump_int_param(return_reference);
+	salsa3_dump_znode(function_token);
+	salsa3_dump_znode(function_name);
+	salsa3_dump_znode(fn_flags_znode);
+	salsa3_end();
 }
 /* }}} */
 
@@ -393,20 +427,33 @@ void zend_do_handle_exception(TSRMLS_D) /* {{{ */
 
 void zend_do_end_function_declaration(const znode *function_token TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("begin_function_declaration");
+	salsa3_dump_znode(function_token);
+	salsa3_end();
 }
 /* }}} */
 
 void zend_do_receive_arg(zend_uchar op, znode *varname, const znode *offset, const znode *initialization,
 							znode *class_type, zend_bool pass_by_reference TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	/* argument declaration function */
+	salsa3_begin("receive_arg");
+	salsa3_dump_int_param(op);
+	salsa3_dump_int_param(pass_by_reference);
+	salsa3_dump_znode(varname);
+	salsa3_dump_znode(offset);
+	salsa3_dump_znode(initialization);
+	salsa3_dump_znode(class_type);
+	salsa3_end();
 }
 /* }}} */
 
 int zend_do_begin_function_call(znode *function_name, zend_bool check_namespace TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("begin_function_call");
+	salsa3_dump_int_param(check_namespace);
+	salsa3_dump_znode(function_name);
+	salsa3_end();
 	return 0;
 }
 /* }}} */
@@ -486,13 +533,25 @@ int zend_do_begin_class_member_function_call(znode *class_name, znode *method_na
 
 void zend_do_end_function_call(znode *function_name, znode *result, const znode *argument_list, int is_method, int is_dynamic_fcall TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("end_function_call");
+	salsa3_dump_int_param(is_method);
+	salsa3_dump_int_param(is_dynamic_fcall);
+	salsa3_dump_znode(function_name);
+	salsa3_dump_znode(result);
+	/* Do not print argument_list:
+	 * 	- it is tracked via do_pass_param
+	 * 	- removed in 5.6 code */
+	salsa3_end();
 }
 /* }}} */
 
 void zend_do_pass_param(znode *param, zend_uchar op, int offset TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("pass_param");
+	salsa3_dump_int_param(op);
+	salsa3_dump_int_param(offset);
+	salsa3_dump_znode(param);
+	salsa3_end();
 }
 /* }}} */
 
@@ -647,7 +706,8 @@ ZEND_API zend_class_entry *do_bind_inherited_class(const zend_op_array *op_array
 
 void zend_do_early_binding(TSRMLS_D) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("do_early_binding");
+	salsa3_end();
 }
 /* }}} */
 
@@ -941,7 +1001,11 @@ void zend_do_unset(const znode *variable TSRMLS_DC) /* {{{ */
 
 void zend_do_isset_or_isempty(int type, znode *result, znode *variable TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("isset_or_isempty");
+	salsa3_dump_int_param(type);
+	salsa3_dump_znode(result);
+	salsa3_dump_znode(variable);
+	salsa3_end();
 }
 /* }}} */
 
@@ -1037,7 +1101,7 @@ void zend_do_qm_false(znode *result, const znode *false_value, const znode *qm_t
 
 void zend_do_extended_info(TSRMLS_D) /* {{{ */
 {
-	salsa3_preamble("extended_info");
+	salsa3_begin("extended_info");
 	salsa3_end();
 }
 /* }}} */
@@ -1050,7 +1114,8 @@ void zend_do_extended_fcall_begin(TSRMLS_D) /* {{{ */
 
 void zend_do_extended_fcall_end(TSRMLS_D) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("extended_fcall_end");
+	salsa3_end();
 }
 /* }}} */
 
@@ -1152,3 +1217,4 @@ char* estrndup(const char* str, size_t sz) {
 /* Stubs for zend_yytnamerr that is never used */
 char* yy_text = "\0";
 size_t yy_leng = 0;
+
