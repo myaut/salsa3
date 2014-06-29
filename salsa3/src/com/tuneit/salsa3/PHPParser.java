@@ -63,8 +63,12 @@ public final class PHPParser {
 						ZNode zNode = new ZNode();
 						
 						zNode.id = jsonZNode.getInt("nodeid");
-						zNode.type = jsonZNode.getInt("type");
-						zNode.value = jsonZNode.getString("value");
+						zNode.type = jsonZNode.optInt("type", -1);
+						zNode.value = jsonZNode.optString("value", "");
+						
+						if(zNode.type == -1) {
+							continue;
+						}
 						
 						ASTNode node = zNode2AST.convert(zNode);
 						
@@ -83,6 +87,7 @@ public final class PHPParser {
 			}
 			
 			ASTStatement rootNode = (ASTStatement) handler.getRootNode();
+			rootNode.filterReused();
 			rootNode.dumpStatement(System.out);
 		}
 		catch(IOException ioe) {

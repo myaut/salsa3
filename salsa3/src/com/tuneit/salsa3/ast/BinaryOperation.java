@@ -42,6 +42,9 @@ public class BinaryOperation extends ASTNode implements Cloneable {
 		this.left = left;
 		this.right = right;
 		this.type = type;
+		
+		left.reuseInExpression(this);
+		right.reuseInExpression(this);
 	}
 	
 	public ASTNode clone() {

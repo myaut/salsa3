@@ -11,8 +11,11 @@ function base64_echo($arg) {
 if(isset($_GET['str'])) {
 	plain_echo($_GET['str']);
 }
-else if(isset($_GET['b64'])) {
+elseif(isset($_GET['b64'])) {
 	base64_echo($_GET['b64']);
+}
+else {
+	header("Location: index.php");
 }
 
 ?>

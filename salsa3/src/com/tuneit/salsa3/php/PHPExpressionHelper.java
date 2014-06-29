@@ -1,8 +1,7 @@
 package com.tuneit.salsa3.php;
 
 import com.tuneit.salsa3.ParserException;
-import com.tuneit.salsa3.ast.ASTNode;
-import com.tuneit.salsa3.ast.BinaryOperation;
+import com.tuneit.salsa3.ast.*;
 
 public class PHPExpressionHelper {	
 	private static final int ZEND_ADD = 1;
@@ -22,8 +21,18 @@ public class PHPExpressionHelper {
 	private static final int ZEND_IS_NOT_EQUAL = 18;
 	private static final int ZEND_IS_SMALLER = 19;
 	private static final int ZEND_IS_SMALLER_OR_EQUAL = 20;
-
 	
+	private static final int ZEND_ISSET = 0x02000000;
+	private static final int ZEND_ISEMPTY = 0x01000000;
+
+	private static ASTNode genericNode = new ASTNode();
+	
+	/**
+	 * 
+	 * @param state
+	 * @return null if state was not handled, or created node
+	 * @throws ParserException
+	 */
 	public static ASTNode handleState(PHPParserState state) throws ParserException {
 		if(state.isState("binary_op")) {
 			ASTNode result = state.getNode("result");
@@ -44,7 +53,47 @@ public class PHPExpressionHelper {
 			result.setNode(bop);
 			
 			/* Result will be re-used in statement, so do not return it this time */
-			return null;
+			return result;
+		}
+		else if(state.isState("array_dim")) {
+			ASTNode result = state.getNode("result");
+			ASTNode parent = state.getNode("parent");
+			ASTNode dim = state.getNode("dim");
+			
+			ArrayElement arrayElement = new ArrayElement(parent, dim);
+			
+			result.setNode(arrayElement);
+			
+			return result;
+		}
+		else if(state.isState("isset_or_isempty")) {
+			int type = state.getIntParam("type");
+			
+			ASTNode result = state.getNode("result");
+			ASTNode var = state.getNode("variable");
+			
+			String functionName;
+			
+			/* Treat isset/empty operator as a special function call */
+			if(type == ZEND_ISSET) {
+				functionName = "isset";
+			}
+			else if(type == ZEND_ISEMPTY) {
+				functionName = "empty";
+			}
+			else {
+				throw new ParserException("Unknown isset/isempty type");
+			}
+			
+			FunctionCall fcall = new FunctionCall(functionName); 			
+			fcall.addArgument(var, false);
+			
+			result.setNode(fcall);
+			
+			return result;
+		}
+		else if(state.isGenericState()) {
+			return genericNode;
 		}
 		
 		return null;

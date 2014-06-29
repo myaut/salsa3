@@ -2,11 +2,12 @@ package com.tuneit.salsa3.ast;
 
 import java.util.ArrayList;
 
-public class FunctionCall extends ASTNode {
+public class FunctionCall extends ASTNode {	
 	public class Argument {
 		public ASTNode argument;
 		public String key;
 		public int offset;
+		public boolean byReference;
 	}
 	
 	private String functionName;	
@@ -26,22 +27,28 @@ public class FunctionCall extends ASTNode {
 	 * @param argument Argument expression
 	 * @param key For key-value arguments, key
 	 */
-	public void addArgument(ASTNode argument, String key) {
+	public void addArgument(ASTNode argument, boolean byReference, String key) {
 		Argument arg = new Argument();
 		arg.argument = argument;
 		arg.key = key;
 		arg.offset = -1;
+		arg.byReference = byReference;
 		
 		this.arguments.add(arg);
+		
+		argument.reuseInExpression(this);
 	}
 	
-	public void addArgument(ASTNode argument) {
+	public void addArgument(ASTNode argument, boolean byReference) {
 		Argument arg = new Argument();
 		arg.argument = argument;
 		arg.key = null;
 		arg.offset = this.argCount++;
+		arg.byReference = byReference;
 		
 		this.arguments.add(arg);
+		
+		argument.reuseInExpression(this);
 	}
 
 	public String getFunctionName() {
@@ -61,9 +68,10 @@ public class FunctionCall extends ASTNode {
 		
 		sb.append("FunctionCall [name=");
 		sb.append(functionName);
-		sb.append(", ");
 		
 		for(Argument argument : arguments) {
+			sb.append(", ");
+			
 			if(argument.key != null) {
 				sb.append(argument.key);
 			}
@@ -72,8 +80,6 @@ public class FunctionCall extends ASTNode {
 			}
 			sb.append("=");
 			sb.append(argument.argument.toString());
-			
-			sb.append(", ");
 		}
 		
 		sb.append("]");

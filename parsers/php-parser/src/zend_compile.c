@@ -87,6 +87,7 @@ static void _salsa3_dump_znode(const char* name, const znode* arg) {
 			break;
 		case IS_STRING:
 		case IS_CONSTANT:
+		case IS_VARIABLE:
 			fputs(", \"value\": \"", stdout);
 			escaped_print_string(Z_STRVAL_P(zv), Z_STRISESC_P(zv));
 			fputc('\"', stdout);
@@ -94,6 +95,9 @@ static void _salsa3_dump_znode(const char* name, const znode* arg) {
 		}
 
 		printf(", \"type\": %d", zv->type);
+	}
+	else {
+
 	}
 
 	fputs("}", stdout);
@@ -427,7 +431,7 @@ void zend_do_handle_exception(TSRMLS_D) /* {{{ */
 
 void zend_do_end_function_declaration(const znode *function_token TSRMLS_DC) /* {{{ */
 {
-	salsa3_begin("begin_function_declaration");
+	salsa3_begin("end_function_declaration");
 	salsa3_dump_znode(function_token);
 	salsa3_end();
 }

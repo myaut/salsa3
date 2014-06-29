@@ -8,6 +8,8 @@ import java.util.ArrayList;
  * Class for compound statements
  */
 public class ASTStatement extends ASTNode {
+	public static final String TABSTOP = "   ";
+	
 	private ArrayList<ASTNode> children;
 	
 	public ASTStatement() {
@@ -35,8 +37,25 @@ public class ASTStatement extends ASTNode {
 			
 			if(node instanceof ASTStatement) {
 				ASTStatement stmt = (ASTStatement) node;
-				stmt.dumpStatement(os, indent + "   ");
+				stmt.dumpStatement(os, indent + TABSTOP);
+				
+				s.println();
 			}
 		}
+	}
+	
+	@Override
+	public void filterReused() {
+		ArrayList<ASTNode> newChildren = new ArrayList<ASTNode>();
+		
+		for(ASTNode node : children) {
+			if(!node.getReusedInExpression()) {
+				newChildren.add(node);
+			}
+			
+			node.filterReused();
+		}
+		
+		children = newChildren;
 	}
 }
