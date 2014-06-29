@@ -60,7 +60,7 @@ static void salsa3_begin(const char* state) {
 }
 
 static void _salsa3_dump_int_param(const char* name, int param) {
-	printf(", '%s': %d", name, param);
+	printf(", \"%s\": %d", name, param);
 }
 
 static void _salsa3_dump_znode(const char* name, const znode* arg) {
