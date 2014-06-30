@@ -84,6 +84,8 @@ public final class PHPParser {
 				}
 				
 				handler = handler.handleState(state);
+				
+				// System.out.println(handler + " " + state.state); 
 			}
 			
 			ASTStatement rootNode = (ASTStatement) handler.getRootNode();

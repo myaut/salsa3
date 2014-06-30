@@ -30,16 +30,6 @@ public class PHPStatementHandler implements PHPParserHandler {
 			
 			return this;
 		}
-		else if(state.isState("begin_function_call")) {
-			PHPFunctionCall phpFunctionCall = new PHPFunctionCall(this);
-			PHPParserHandler newHandler = phpFunctionCall.handleState(state);
-			
-			ASTNode fcall = phpFunctionCall.getRootNode();
-			
-			rootNode.addChild(fcall);
-			
-			return newHandler;
-		}
 		else if(state.isState("if_cond")) {
 			PHPIfHandler ifHandler = new PHPIfHandler(this);
 			PHPParserHandler newHandler = ifHandler.handleState(state);
@@ -51,10 +41,7 @@ public class PHPStatementHandler implements PHPParserHandler {
 			return newHandler;
 		}
 		
-		ASTNode node = PHPExpressionHelper.handleState(state);
-		/* use node? */
-		
-		return this;
+		return PHPExpressionHelper.handleState(state, this);
 	}
 
 	@Override

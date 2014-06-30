@@ -25,7 +25,7 @@ public class PHPExpressionHelper {
 	private static final int ZEND_ISSET = 0x02000000;
 	private static final int ZEND_ISEMPTY = 0x01000000;
 
-	private static ASTNode genericNode = new ASTNode();
+	// private static ASTNode genericNode = new ASTNode();
 	
 	/**
 	 * 
@@ -33,7 +33,7 @@ public class PHPExpressionHelper {
 	 * @return null if state was not handled, or created node
 	 * @throws ParserException
 	 */
-	public static ASTNode handleState(PHPParserState state) throws ParserException {
+	public static PHPParserHandler handleState(PHPParserState state, PHPParserHandler handler) throws ParserException {
 		if(state.isState("binary_op")) {
 			ASTNode result = state.getNode("result");
 			ASTNode op1 = state.getNode("op1");
@@ -52,8 +52,22 @@ public class PHPExpressionHelper {
 			
 			result.setNode(bop);
 			
-			/* Result will be re-used in statement, so do not return it this time */
-			return result;
+			return handler;
+		}
+		else if(state.isState("begin_function_call")) {
+			PHPFunctionCall phpFunctionCall = new PHPFunctionCall(handler);
+			PHPParserHandler newHandler = phpFunctionCall.handleState(state);
+			
+			ASTNode fcall = phpFunctionCall.getRootNode();
+			
+			ASTNode rootNode = handler.getRootNode();
+			
+			if(rootNode instanceof ASTStatement) {
+				ASTStatement stmt = (ASTStatement) rootNode;
+				stmt.addChild(fcall);
+			} 
+			
+			return newHandler;
 		}
 		else if(state.isState("array_dim")) {
 			ASTNode result = state.getNode("result");
@@ -63,8 +77,6 @@ public class PHPExpressionHelper {
 			ArrayElement arrayElement = new ArrayElement(parent, dim);
 			
 			result.setNode(arrayElement);
-			
-			return result;
 		}
 		else if(state.isState("isset_or_isempty")) {
 			int type = state.getIntParam("type");
@@ -90,13 +102,13 @@ public class PHPExpressionHelper {
 			
 			result.setNode(fcall);
 			
-			return result;
+			return handler;
 		}
 		else if(state.isGenericState()) {
-			return genericNode;
+			return handler;
 		}
 		
-		return null;
+		return handler;
 	}
 	
 	private static BinaryOperation.Type getBinaryOpType(int bopType) throws ParserException {

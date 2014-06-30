@@ -12,6 +12,8 @@ public class PHPFunctionCall implements PHPParserHandler {
 	
 	private PHPParserHandler parent;
 	private FunctionCall fcall;
+	
+	private boolean beginIsHandled = false;
 
 	public PHPFunctionCall(PHPParserHandler parent) {
 		this.parent = parent;
@@ -20,12 +22,15 @@ public class PHPFunctionCall implements PHPParserHandler {
 	
 	@Override
 	public PHPParserHandler handleState(PHPParserState state) throws ParserException {
-		if(state.isState("begin_function_call")) {
+		if(!beginIsHandled && state.isState("begin_function_call")) {
 			Literal functionNameNode = (Literal) state.getNode("function_name");
 			String functionName = functionNameNode.getToken();
 			
 			fcall = new FunctionCall(functionName);			
 			functionNameNode.setNode(fcall);
+			
+			/* For nested function calls, pass "begin_function_call" state to  */
+			beginIsHandled = true;
 			
 			return this;
 		}
@@ -46,11 +51,14 @@ public class PHPFunctionCall implements PHPParserHandler {
 			return this;
 		}
 		else if(state.isState("end_function_call")) {
-			return parent;
+			ASTNode result = state.getNode("result");
+			
+			result.setNode(fcall);
+			
+			return parent;	
 		}
-		
-		ASTNode node = PHPExpressionHelper.handleState(state);
-		return this;
+				
+		return PHPExpressionHelper.handleState(state, this);
 	}
 
 	@Override

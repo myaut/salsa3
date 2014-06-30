@@ -43,8 +43,6 @@ public class ASTNode {
 	}
 	
 	public void setNode(ASTNode node) {
-		// System.out.println("" + this + " -> " + node);
-		
 		ASTNode parent = this;
 		
 		while(parent.getParent() != null) {
