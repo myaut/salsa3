@@ -891,7 +891,13 @@ static int zend_constant_ct_subst(znode *result, zval *const_name, int all_inter
 
 void zend_do_fetch_constant(znode *result, znode *constant_container, znode *constant_name, int mode, zend_bool check_namespace TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("fetch_constant");
+	salsa3_dump_int_param(mode);
+	salsa3_dump_int_param(check_namespace);
+	salsa3_dump_znode(result);
+	salsa3_dump_znode(constant_container);
+	salsa3_dump_znode(constant_name);
+	salsa3_end();
 }
 /* }}} */
 
@@ -987,7 +993,11 @@ void zend_do_cast(znode *result, const znode *expr, int type TSRMLS_DC) /* {{{ *
 
 void zend_do_include_or_eval(int type, znode *result, const znode *op1 TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("include_or_eval");
+	salsa3_dump_int_param(type);
+	salsa3_dump_znode(result);
+	salsa3_dump_znode(op1);
+	salsa3_end();
 }
 /* }}} */
 

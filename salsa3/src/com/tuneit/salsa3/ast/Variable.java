@@ -10,6 +10,10 @@ public class Variable extends ASTNode {
 	public String getVarName() {
 		return varName;
 	}
+	
+	public ASTNode clone() {
+		return new Variable(varName);
+	}
 
 	@Override
 	public String toString() {

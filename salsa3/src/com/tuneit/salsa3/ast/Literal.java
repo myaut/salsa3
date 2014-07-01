@@ -7,8 +7,7 @@ public class Literal extends ASTNode {
 		LIT_LONG,
 		LIT_FLOAT,
 		LIT_STRING,
-		LIT_CHARACTER,
-		LIT_CONSTANT
+		LIT_CHARACTER
 	};
 	
 	private Object data;

@@ -35,78 +35,110 @@ public class PHPExpressionHelper {
 	 */
 	public static PHPParserHandler handleState(PHPParserState state, PHPParserHandler handler) throws ParserException {
 		if(state.isState("binary_op")) {
-			ASTNode result = state.getNode("result");
-			ASTNode op1 = state.getNode("op1");
-			ASTNode op2 = state.getNode("op2");
-			
-			int bopType = state.getIntParam("op");
-			
-			if(result == op1) {
-				op1 = op1.cloneNode();
-			}
-			else if(result == op2) {
-				op2 = op2.cloneNode();
-			}
-			
-			BinaryOperation bop = new BinaryOperation(getBinaryOpType(bopType), op1, op2);
-			
-			result.setNode(bop);
-			
-			return handler;
+			return PHPExpressionHelper.handleBinaryOperation(state, handler);
 		}
 		else if(state.isState("begin_function_call")) {
-			PHPFunctionCall phpFunctionCall = new PHPFunctionCall(handler);
-			PHPParserHandler newHandler = phpFunctionCall.handleState(state);
-			
-			ASTNode fcall = phpFunctionCall.getRootNode();
-			
-			ASTNode rootNode = handler.getRootNode();
-			
-			if(rootNode instanceof ASTStatement) {
-				ASTStatement stmt = (ASTStatement) rootNode;
-				stmt.addChild(fcall);
-			} 
-			
-			return newHandler;
+			return PHPExpressionHelper.handleFunctionCall(state, handler);
 		}
 		else if(state.isState("array_dim")) {
-			ASTNode result = state.getNode("result");
-			ASTNode parent = state.getNode("parent");
-			ASTNode dim = state.getNode("dim");
-			
-			ArrayElement arrayElement = new ArrayElement(parent, dim);
-			
-			result.setNode(arrayElement);
+			return PHPExpressionHelper.handleArrayIndexAccess(state, handler);
 		}
 		else if(state.isState("isset_or_isempty")) {
-			int type = state.getIntParam("type");
-			
-			ASTNode result = state.getNode("result");
-			ASTNode var = state.getNode("variable");
-			
-			String functionName;
-			
-			/* Treat isset/empty operator as a special function call */
-			if(type == ZEND_ISSET) {
-				functionName = "isset";
-			}
-			else if(type == ZEND_ISEMPTY) {
-				functionName = "empty";
-			}
-			else {
-				throw new ParserException("Unknown isset/isempty type");
-			}
-			
-			FunctionCall fcall = new FunctionCall(functionName); 			
-			fcall.addArgument(var, false);
-			
-			result.setNode(fcall);
-			
-			return handler;
+			return PHPExpressionHelper.handleIssetOrIsempty(state, handler);
+		}
+		else if(state.isState("fetch_constant")) {
+			return PHPExpressionHelper.handleConstant(state, handler);
 		}
 		else if(state.isGenericState()) {
 			return handler;
 		}
+		
+		return handler;
+	}
+	
+	private static PHPParserHandler handleBinaryOperation(PHPParserState state, PHPParserHandler handler) throws ParserException {
+		ASTNode result = state.getNode("result");
+		ASTNode op1 = state.getNode("op1");
+		ASTNode op2 = state.getNode("op2");
+		
+		int bopType = state.getIntParam("op");
+		
+		if(result == op1) {
+			op1 = op1.cloneNode();
+		}
+		else if(result == op2) {
+			op2 = op2.cloneNode();
+		}
+		
+		BinaryOperation bop = new BinaryOperation(getBinaryOpType(bopType), op1, op2);
+		
+		result.setNode(bop);
+		
+		return handler;
+	}
+	
+	private static PHPParserHandler handleFunctionCall(PHPParserState state, PHPParserHandler handler) throws ParserException {
+		PHPFunctionCall phpFunctionCall = new PHPFunctionCall(handler);
+		PHPParserHandler newHandler = phpFunctionCall.handleState(state);
+		
+		ASTNode fcall = phpFunctionCall.getRootNode();
+		
+		ASTNode rootNode = handler.getRootNode();
+		
+		if(rootNode instanceof ASTStatement) {
+			ASTStatement stmt = (ASTStatement) rootNode;
+			stmt.addChild(fcall);
+		} 
+		
+		return newHandler;
+	}
+	
+	private static PHPParserHandler handleArrayIndexAccess(PHPParserState state, PHPParserHandler handler) throws ParserException {
+		ASTNode result = state.getNode("result");
+		ASTNode parent = state.getNode("parent");
+		ASTNode dim = state.getNode("dim");
+		
+		ArrayElement arrayElement = new ArrayElement(parent, dim);
+		
+		result.setNode(arrayElement);
+		
+		return handler;
+	}
+	
+	private static PHPParserHandler handleIssetOrIsempty(PHPParserState state, PHPParserHandler handler) throws ParserException {
+		int type = state.getIntParam("type");
+		
+		ASTNode result = state.getNode("result");
+		ASTNode var = state.getNode("variable");
+		
+		String functionName;
+		
+		/* Treat isset/empty operator as a special function call */
+		if(type == ZEND_ISSET) {
+			functionName = "isset";
+		}
+		else if(type == ZEND_ISEMPTY) {
+			functionName = "empty";
+		}
+		else {
+			throw new ParserException("Unknown isset/isempty type");
+		}
+		
+		FunctionCall fcall = new FunctionCall(functionName); 			
+		fcall.addArgument(var, false);
+		
+		result.setNode(fcall);
+		
+		return handler;
+	}
+	
+	private static PHPParserHandler handleConstant(PHPParserState state, PHPParserHandler handler) throws ParserException {
+		ASTNode result = state.getNode("result");
+		Literal constantNameNode = (Literal) state.getNode("constant_name");
+		
+		String constantName = constantNameNode.getToken();
+		
+		result.setNode(new Constant(constantName));
 		
 		return handler;
 	}

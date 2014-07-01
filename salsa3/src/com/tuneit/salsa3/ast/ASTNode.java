@@ -70,7 +70,7 @@ public class ASTNode {
 			return (ASTNode) this.clone();
 		}
 		catch(CloneNotSupportedException cnse) {
-			throw new ParserException("Cloning not supported by this ASTNode");
+			throw new ParserException("Cloning not supported by " + this.getClass().getName() + "!");
 		}
 	}
 }

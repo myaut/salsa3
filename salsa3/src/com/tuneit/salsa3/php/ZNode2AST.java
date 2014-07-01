@@ -36,10 +36,6 @@ public class ZNode2AST {
 		switch(zNode.type) {
 		case IS_STRING:
 			return new Literal(Literal.Type.LIT_STRING, zNode.value, zNode.value);
-		case IS_CONSTANT:
-			return new Literal(Literal.Type.LIT_CONSTANT, zNode.value);
-		case IS_VARIABLE:
-			return new Variable(zNode.value);
 		case IS_LONG:
 			return new Literal(Literal.Type.LIT_LONG, zNode.value);
 		case IS_BOOL:
@@ -48,6 +44,11 @@ public class ZNode2AST {
 			return new Literal(Literal.Type.LIT_FLOAT, zNode.value);
 		case IS_NULL:
 			return new Literal(Literal.Type.LIT_NULL, zNode.value);
+			
+		case IS_CONSTANT:
+			return new Constant(zNode.value);
+		case IS_VARIABLE:
+			return new Variable(zNode.value);
 		}
 		
 		throw new ParserException("Couldn't convert to AST: " + zNode);
