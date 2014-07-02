@@ -26,6 +26,9 @@ public class PHPStatementHandler implements PHPParserHandler {
 		else if(state.isState("include_or_eval")) {
 			return this.handleIncludeOrEval(state);
 		}
+		else if(state.isState("use")) {
+			return this.handleUse(state);
+		}
 		
 		return PHPExpressionHelper.handleState(state, this);
 	}
@@ -89,6 +92,17 @@ public class PHPStatementHandler implements PHPParserHandler {
 		rootNode.addChild(ifNode);
 		
 		return newHandler;
+	}
+	
+	public PHPParserHandler handleUse(PHPParserState state) throws ParserException {
+		ASTNode nsName = state.getNode("ns_name");
+		ASTNode nsAlias = state.getNodeOptional("new_name");
+		
+		UseStatement useNode = new UseStatement((NamespaceName) nsName, (NamespaceName) nsAlias);
+		
+		rootNode.addChild(useNode);
+		
+		return this;
 	}
 
 	@Override

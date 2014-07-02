@@ -17,22 +17,24 @@ zend_compiler_globals cg;
 int token_debug;
 #endif
 
+/* Depending of type of quote chars (single of double), opposite quotes may not be escaped:
+ * 'Some text in "quotes"', but we set is_escaped because it is PHP literal. Double check
+ * it while printing. */
+#define IS_REALLY_ESCAPED() 	(is_escaped && str > begin && str[-1] == '\\')
+
 static void escaped_print_string(const char* str, int is_escaped) {
+	const char* begin = str;
+
 	while(*str != 0) {
 		switch (*str) {
 		  case '\"':
-		    fputs("\\\"", stdout);
+		    fputs((IS_REALLY_ESCAPED()) ? "\"" : "\\\"", stdout);
 		    break;
 		  case '\'':
-		    fputs("\\\'", stdout);
+		    fputs((IS_REALLY_ESCAPED()) ? "\'" : "\\\'", stdout);
 		    break;
 		  case '\\':
-		    if(is_escaped) {
-		    	fputc('\\', stdout);
-		    }
-		    else {
-		    	fputs("\\\\", stdout);
-		    }
+		    fputs((is_escaped) ? "\\" : "\\\\", stdout);
 			break;
 		  case '\a':
 		    fputs("\\a", stdout);
@@ -53,6 +55,8 @@ static void escaped_print_string(const char* str, int is_escaped) {
 		++str;
 	}
 }
+
+#undef IS_REALLY_ESCAPED
 
 static void salsa3_begin(const char* state) {
 	printf("{\"lineno\": %d, \"state\": \"%s\" ",
@@ -198,7 +202,12 @@ void zend_do_unary_op(zend_uchar op, znode *result, const znode *op1 TSRMLS_DC) 
 
 void zend_do_binary_assign_op(zend_uchar op, znode *result, const znode *op1, const znode *op2 TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("binary_assign_op");
+	salsa3_dump_int_param(op);
+	salsa3_dump_znode(result);
+	salsa3_dump_znode(op1);
+	salsa3_dump_znode(op2);
+	salsa3_end();
 }
 /* }}} */
 
@@ -253,7 +262,10 @@ void fetch_string_offset(znode *result, const znode *parent, const znode *offset
 
 void zend_do_print(znode *result, const znode *arg TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("print");
+	salsa3_dump_znode(result);
+	salsa3_dump_znode(arg);
+	salsa3_end();
 }
 /* }}} */
 
@@ -531,7 +543,12 @@ void zend_do_build_full_name(znode *result, znode *prefix, znode *name, int is_c
 
 int zend_do_begin_class_member_function_call(znode *class_name, znode *method_name TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("begin_class_member_function_call");
+	salsa3_dump_znode(class_name);
+	salsa3_dump_znode(method_name);
+	salsa3_end();
+
+	return 0;
 }
 /* }}} */
 
@@ -575,60 +592,88 @@ void zend_do_yield(znode *result, znode *value, const znode *key, zend_bool is_v
 
 void zend_do_first_catch(znode *open_parentheses TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("first_catch");
+	salsa3_dump_znode(open_parentheses);
+	salsa3_end();
 }
 /* }}} */
 
 void zend_initialize_try_catch_element(znode *catch_token TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("try");
+	salsa3_dump_znode(catch_token);
+	salsa3_end();
 }
 /* }}} */
 
 void zend_do_mark_last_catch(const znode *first_catch, const znode *last_additional_catch TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("end_catch");
+	salsa3_dump_znode(first_catch);
+	/* FIXME: salsa3_dump_znode(last_additional_catch); */
+	salsa3_end();
 }
 /* }}} */
 
 void zend_do_try(znode *try_token TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("try");
+	salsa3_dump_znode(try_token);
+	salsa3_end();
 }
 /* }}} */
 
 void zend_do_finally(znode *finally_token TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("finally");
+	salsa3_dump_znode(finally_token);
+	salsa3_end();
 }
 /* }}} */
 
 void zend_do_begin_catch(znode *catch_token, znode *class_name, znode *catch_var, znode *first_catch TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("catch");
+	salsa3_dump_znode(catch_token);
+	salsa3_dump_znode(class_name);
+	salsa3_dump_znode(catch_var);
+	salsa3_dump_znode(first_catch);
+	salsa3_end();
 }
 /* }}} */
 
 void zend_do_end_catch(znode *catch_token TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("end_catch");
+	salsa3_dump_znode(catch_token);
+	salsa3_end();
 }
 /* }}} */
 
 void zend_do_bind_catch(znode *try_token, znode *catch_token TSRMLS_DC) /* {{{ */ {
-	salsa3_unimplimented();
+	salsa3_begin("bind_catch");
+	salsa3_dump_znode(try_token);
+	salsa3_dump_znode(catch_token);
+	/* FIXME: salsa3_dump_znode(last_additional_catch); */
+	salsa3_end();
 }
 /* }}} */
 
 void zend_do_end_finally(znode *try_token, znode* catch_token, znode *finally_token TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("end_finally");
+	salsa3_dump_znode(try_token);
+	salsa3_dump_znode(catch_token);
+	salsa3_dump_znode(finally_token);
+	salsa3_end();
 }
 /* }}} */
 
 void zend_do_throw(const znode *expr TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("throw");
+	salsa3_dump_znode(expr);
+	salsa3_end();
 }
 /* }}} */
 
@@ -1147,7 +1192,11 @@ void zend_do_begin_namespace(const znode *name, zend_bool with_bracket TSRMLS_DC
 
 void zend_do_use(znode *ns_name, znode *new_name, int is_global TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("use");
+	salsa3_dump_int_param(is_global);
+	salsa3_dump_znode(ns_name);
+	salsa3_dump_znode(new_name);
+	salsa3_end();
 }
 /* }}} */
 
@@ -1159,7 +1208,11 @@ void zend_do_declare_constant(znode *name, znode *value TSRMLS_DC) /* {{{ */
 
 void zend_do_build_namespace_name(znode *result, znode *prefix, znode *name TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("build_namespace_name");
+	salsa3_dump_znode(result);
+	salsa3_dump_znode(prefix);
+	salsa3_dump_znode(name);
+	salsa3_end();
 }
 
 void zend_do_end_namespace(TSRMLS_D) /* {{{ */

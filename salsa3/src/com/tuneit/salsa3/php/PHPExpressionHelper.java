@@ -49,6 +49,9 @@ public class PHPExpressionHelper {
 		else if(state.isState("fetch_constant")) {
 			return PHPExpressionHelper.handleConstant(state, handler);
 		}
+		else if(state.isState("build_namespace_name")) {
+			return PHPExpressionHelper.handleNamespaceName(state, handler);
+		}
 		else if(state.isGenericState()) {
 			return handler;
 		}
@@ -139,6 +142,29 @@ public class PHPExpressionHelper {
 		String constantName = constantNameNode.getToken();
 		
 		result.setNode(new Constant(constantName));
+		
+		return handler;
+	}
+	
+	private static PHPParserHandler handleNamespaceName(PHPParserState state, PHPParserHandler handler) throws ParserException {
+		ASTNode result = state.getNode("result");
+		Literal name = (Literal) state.getNode("name");
+		
+		if(result instanceof NamespaceName) {
+			NamespaceName nsn = (NamespaceName) result;
+			
+			nsn.addComponent(name.getToken());
+		}
+		else {
+			/* First component of a namespace */
+			NamespaceName nsn = new NamespaceName();
+			Literal prefix = (Literal) state.getNode("prefix");
+			
+			nsn.addComponent(prefix.getToken());
+			nsn.addComponent(name.getToken());
+			
+			result.setNode(nsn);
+		}
 		
 		return handler;
 	}

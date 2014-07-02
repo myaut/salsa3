@@ -32,12 +32,12 @@ public final class PHPParser {
 		ProcessBuilder processBuilder = new ProcessBuilder(PHPParser.phpParserBinary, this.filePath);		
 		processBuilder.redirectOutput(Redirect.PIPE);
 		
+		String line = "<NOJSON>";
+		
 		try {
 			Process process = processBuilder.start();			
 			InputStream inStream = process.getInputStream();
 			BufferedReader reader = new BufferedReader(new InputStreamReader(inStream));
-			
-			String line;
 			
 			/*
 			 * Parse line, provided by salsa3-php-parser from JSON
@@ -85,6 +85,10 @@ public final class PHPParser {
 				
 				handler = handler.handleState(state);
 				
+				if(!state.isMatched()) {
+					System.err.println("State " + state.state + " wasn't matched! ");
+				}
+				
 				// System.out.println(handler + " " + state.state); 
 			}
 			
@@ -97,7 +101,7 @@ public final class PHPParser {
 			throw pe;
 		}
 		catch(JSONException je) {
-			ParserException pe = new ParserException("JSON error", je);
+			ParserException pe = new ParserException("JSON error: " + line, je);
 			throw pe;
 		}
 	}

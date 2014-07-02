@@ -12,6 +12,8 @@ public final class PHPParserState {
 	public int lineNo;
 	public String state;
 	
+	private boolean isMatched;
+	
 	public HashMap<String, Integer> intParams;
 	public HashMap<String, ASTNode> nodes;
 	
@@ -30,14 +32,30 @@ public final class PHPParserState {
 	public PHPParserState() {
 		intParams = new HashMap<String, Integer>();
 		nodes = new HashMap<String, ASTNode>(); 
+		
+		isMatched = false;
 	}
 	
 	public boolean isState(String state) {
-		return this.state.equals(state);
+		boolean isState = this.state.equals(state);
+		
+		if(!isMatched && isState)
+			isMatched = true;
+		
+		return isState;
+	}
+	
+	public boolean isMatched() {
+		return isMatched;
 	}
 	
 	public boolean isGenericState() {
-		return genericStates.contains(state);
+		boolean isState = genericStates.contains(state);
+		
+		if(!isMatched && isState)
+			isMatched = true;
+		
+		return isState;
 	}
 	
 	public ASTNode getNode(String key) throws ParserException {
@@ -45,6 +63,18 @@ public final class PHPParserState {
 		
 		if(node == null) {
 			throw new ParserException("State " + state + " doesn't contain znode " + key + "!");
+		}
+		
+		// System.out.println(key + ": " + node + " -> " + node.getNode());
+		
+		return node.getNode();
+	}
+	
+	public ASTNode getNodeOptional(String key) throws ParserException {
+		ASTNode node = nodes.get(key);
+		
+		if(node == null) {
+			return null;
 		}
 		
 		// System.out.println(key + ": " + node + " -> " + node.getNode());

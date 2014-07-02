@@ -17,6 +17,10 @@ public class ArrayElement extends ASTNode {
 	public ASTNode getIndex() {
 		return index;
 	}
+	
+	public ASTNode clone() {
+		return new ArrayElement(array, index);
+	}
 
 	@Override
 	public String toString() {
