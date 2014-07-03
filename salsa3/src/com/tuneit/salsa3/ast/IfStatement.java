@@ -6,13 +6,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class IfStatement extends ASTStatement {
-	public class Branch {
+	public class Branch extends ASTStatement {
 		public ASTNode condition;
-		public ASTStatement branch;
 		
 		public Branch() {
+			super();
 			condition = null;
-			branch = new ASTStatement();
 		}
 	};
 	
@@ -33,6 +32,8 @@ public class IfStatement extends ASTStatement {
 		Branch branch = new Branch();		
 		branch.condition = condition;
 		
+		condition.reuseInExpression(this);
+		
 		currentBranch = branch;
 		branches.add(branch);
 	}
@@ -47,7 +48,7 @@ public class IfStatement extends ASTStatement {
 	
 	@Override
 	public void addChild(ASTNode child) {
-		this.currentBranch.branch.addChild(child);
+		this.currentBranch.addChild(child);
 	}
 	
 	@Override 
@@ -59,13 +60,13 @@ public class IfStatement extends ASTStatement {
 			s.print("if ");
 			s.println(branch.condition.toString());
 			
-			branch.branch.dumpStatement(os, indent + ASTStatement.TABSTOP);
+			branch.dumpStatement(os, indent + ASTStatement.TABSTOP);
 		}
 	
 		s.print(indent);
 		s.println("else");
 		
-		elseBranch.branch.dumpStatement(os, indent + ASTStatement.TABSTOP);
+		elseBranch.dumpStatement(os, indent + ASTStatement.TABSTOP);
 	}
 	
 	@Override

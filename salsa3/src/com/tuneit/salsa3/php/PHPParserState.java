@@ -85,6 +85,10 @@ public final class PHPParserState {
 		return node.getNode();
 	}
 	
+	public boolean hasNode(String key) {
+		return nodes.containsKey(key);
+	}
+	
 	public int getIntParam(String key) throws ParserException {
 		Integer param = intParams.get(key);
 		

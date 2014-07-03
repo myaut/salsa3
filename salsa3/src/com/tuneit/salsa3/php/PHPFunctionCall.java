@@ -3,7 +3,9 @@ package com.tuneit.salsa3.php;
 import com.tuneit.salsa3.ParserException;
 import com.tuneit.salsa3.ast.ASTNode;
 import com.tuneit.salsa3.ast.FunctionCall;
+import com.tuneit.salsa3.ast.FunctionName;
 import com.tuneit.salsa3.ast.Literal;
+import com.tuneit.salsa3.ast.StaticClassMember;
 
 public class PHPFunctionCall implements PHPParserHandler {
 	private static final int ZEND_SEND_VAL = 65;
@@ -26,10 +28,24 @@ public class PHPFunctionCall implements PHPParserHandler {
 			Literal functionNameNode = (Literal) state.getNode("function_name");
 			String functionName = functionNameNode.getToken();
 			
-			fcall = new FunctionCall(functionName);			
+			fcall = new FunctionCall(new FunctionName(functionName));			
 			functionNameNode.setNode(fcall);
 			
 			/* For nested function calls, pass "begin_function_call" state to  */
+			beginIsHandled = true;
+			
+			return this;
+		}
+		else if(!beginIsHandled && state.isState("begin_class_member_function_call")) {
+			Literal classNameNode = (Literal) state.getNode("class_name");
+			Literal methodNameNode = (Literal) state.getNode("method_name");
+			
+			StaticClassMember method = new StaticClassMember(methodNameNode.getToken());
+			method.addClassName(classNameNode.getToken());
+			
+			fcall = new FunctionCall(method);			
+			classNameNode.setNode(fcall);
+			
 			beginIsHandled = true;
 			
 			return this;

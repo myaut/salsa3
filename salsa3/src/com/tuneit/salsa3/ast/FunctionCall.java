@@ -10,15 +10,15 @@ public class FunctionCall extends ASTNode {
 		public boolean byReference;
 	}
 	
-	private String functionName;	
+	private ASTNode function;	
 	
 	private int argCount;
 	private ArrayList<Argument> arguments;
 	
-	public FunctionCall(String functionName) {
+	public FunctionCall(ASTNode function) {
 		super();
 		
-		this.functionName = functionName;
+		this.function = function;
 		this.arguments = new ArrayList<Argument>();
 		this.argCount = 0;
 	}
@@ -51,8 +51,8 @@ public class FunctionCall extends ASTNode {
 		argument.reuseInExpression(this);
 	}
 
-	public String getFunctionName() {
-		return functionName;
+	public ASTNode getFunction() {
+		return function;
 	}
 
 	public int getArgCount() {
@@ -67,7 +67,7 @@ public class FunctionCall extends ASTNode {
 		StringBuilder sb = new StringBuilder();
 		
 		sb.append("FunctionCall [name=");
-		sb.append(functionName);
+		sb.append(function.toString());
 		
 		for(Argument argument : arguments) {
 			sb.append(", ");

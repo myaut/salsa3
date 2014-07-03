@@ -152,7 +152,7 @@ HNUM	"0x"[0-9a-fA-F]+
 BNUM	"0b"[01]+
 LABEL	[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*
 WHITESPACE [ \n\r\t]+
-TABS_AND_SPACES [ \t]*e
+TABS_AND_SPACES [ \t]*
 TOKENS [;:,.\[\]()|^&+-/*=%!~$<>?@]
 ANY_CHAR [^]
 NEWLINE ("\r"|"\n"|"\r\n")

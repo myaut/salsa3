@@ -31,6 +31,7 @@ public final class PHPParser {
 	public void parse() throws ParserException {
 		ProcessBuilder processBuilder = new ProcessBuilder(PHPParser.phpParserBinary, this.filePath);		
 		processBuilder.redirectOutput(Redirect.PIPE);
+		processBuilder.redirectError(Redirect.INHERIT);
 		
 		String line = "<NOJSON>";
 		
@@ -92,9 +93,18 @@ public final class PHPParser {
 				// System.out.println(handler + " " + state.state); 
 			}
 			
+			int exitValue = process.waitFor();
+			if(exitValue != 0) {
+				throw new ParserException("Parser error: return code = " + exitValue);
+			}
+			
 			ASTStatement rootNode = (ASTStatement) handler.getRootNode();
 			rootNode.filterReused();
 			rootNode.dumpStatement(System.out);
+		}
+		catch(InterruptedException ie) {
+			ParserException pe = new ParserException("Parser process was interrupted", ie);
+			throw pe;
 		}
 		catch(IOException ioe) {
 			ParserException pe = new ParserException("Internal error", ioe);

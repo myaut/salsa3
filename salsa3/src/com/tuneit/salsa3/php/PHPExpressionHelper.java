@@ -37,7 +37,7 @@ public class PHPExpressionHelper {
 		if(state.isState("binary_op")) {
 			return PHPExpressionHelper.handleBinaryOperation(state, handler);
 		}
-		else if(state.isState("begin_function_call")) {
+		else if(state.isState("begin_function_call") || state.isState("begin_class_member_function_call")) {
 			return PHPExpressionHelper.handleFunctionCall(state, handler);
 		}
 		else if(state.isState("array_dim")) {
@@ -52,9 +52,36 @@ public class PHPExpressionHelper {
 		else if(state.isState("build_namespace_name")) {
 			return PHPExpressionHelper.handleNamespaceName(state, handler);
 		}
+		else if(state.isState("print")) {
+			return PHPExpressionHelper.handlePrint(state, handler);
+		}
+		else if(state.isState("init_array")) {
+			/* ArrayLiteral already created in ZNode2AST */
+			if(state.hasNode("expr")) {
+				return PHPExpressionHelper.handleArrayElement(state, handler);
+			}
+		}
+		else if(state.isState("add_array_element")) {
+			return PHPExpressionHelper.handleArrayElement(state, handler);
+		}
 		else if(state.isGenericState()) {
 			return handler;
 		}
+		
+		return handler;
+	}
+	
+	private static PHPParserHandler handlePrint(PHPParserState state, PHPParserHandler handler) throws ParserException {
+		ASTNode result = state.getNode("result");
+		ASTNode arg = state.getNode("arg");
+		
+		/* Treat echo operator as a special function call */
+		FunctionCall fcall = new FunctionCall(new FunctionName("print")); 			
+		fcall.addArgument(arg, false);
+		
+		result.setNode(fcall);
+		
+		addChildToHandler(fcall, handler);
 		
 		return handler;
 	}
@@ -86,12 +113,7 @@ public class PHPExpressionHelper {
 		
 		ASTNode fcall = phpFunctionCall.getRootNode();
 		
-		ASTNode rootNode = handler.getRootNode();
-		
-		if(rootNode instanceof ASTStatement) {
-			ASTStatement stmt = (ASTStatement) rootNode;
-			stmt.addChild(fcall);
-		} 
+		addChildToHandler(fcall, handler);
 		
 		return newHandler;
 	}
@@ -101,9 +123,9 @@ public class PHPExpressionHelper {
 		ASTNode parent = state.getNode("parent");
 		ASTNode dim = state.getNode("dim");
 		
-		ArrayElement arrayElement = new ArrayElement(parent, dim);
+		ArrayIndex arrayIndex = new ArrayIndex(parent, dim);
 		
-		result.setNode(arrayElement);
+		result.setNode(arrayIndex);
 		
 		return handler;
 	}
@@ -114,20 +136,20 @@ public class PHPExpressionHelper {
 		ASTNode result = state.getNode("result");
 		ASTNode var = state.getNode("variable");
 		
-		String functionName;
+		ASTNode function;
 		
 		/* Treat isset/empty operator as a special function call */
 		if(type == ZEND_ISSET) {
-			functionName = "isset";
+			function = new FunctionName("isset");
 		}
 		else if(type == ZEND_ISEMPTY) {
-			functionName = "empty";
+			function = new FunctionName("empty");
 		}
 		else {
 			throw new ParserException("Unknown isset/isempty type");
 		}
 		
-		FunctionCall fcall = new FunctionCall(functionName); 			
+		FunctionCall fcall = new FunctionCall(function); 			
 		fcall.addArgument(var, false);
 		
 		result.setNode(fcall);
@@ -165,6 +187,27 @@ public class PHPExpressionHelper {
 			
 			result.setNode(nsn);
 		}
+		
+		return handler;
+	}
+	
+	private static void addChildToHandler(ASTNode child, PHPParserHandler handler) throws ParserException {
+		ASTNode rootNode = handler.getRootNode();
+		
+		if(rootNode instanceof ASTStatement) {
+			ASTStatement stmt = (ASTStatement) rootNode;
+			stmt.addChild(child);
+		} 
+	}
+	
+	private static PHPParserHandler handleArrayElement(PHPParserState state, PHPParserHandler handler) throws ParserException {
+		ArrayLiteral array = (ArrayLiteral) state.getNode("result");
+		ASTNode value = state.getNode("expr");
+		ASTNode key = state.getNodeOptional("offset");
+		
+		ArrayLiteral.Element el = new ArrayLiteral.Element(value, key);
+		
+		array.addElement(el);
 		
 		return handler;
 	}

@@ -40,6 +40,9 @@ public class PHPStatementHandler implements PHPParserHandler {
 			 * but this approach is easier. */
 			return this.handleAssign(state);
 		}
+		else if(state.isState("declare_constant")) {
+			return this.handleConstant(state);
+		}
 		else if(state.isState("binary_assign_op")) {
 			return this.handleAssignWithBinaryOp(state);
 		}
@@ -72,7 +75,7 @@ public class PHPStatementHandler implements PHPParserHandler {
 		ASTNode arg = state.getNode("arg");
 		
 		/* Treat echo operator as a special function call */
-		FunctionCall fcall = new FunctionCall("echo"); 			
+		FunctionCall fcall = new FunctionCall(new FunctionName("echo")); 			
 		fcall.addArgument(arg, false);
 		
 		rootNode.addChild(fcall);
@@ -83,6 +86,23 @@ public class PHPStatementHandler implements PHPParserHandler {
 	public PHPParserHandler handleAssign(PHPParserState state) throws ParserException {
 		ASTNode value = state.getNode("value");
 		ASTNode variable = state.getNode("variable");
+		
+		Assign assign = new Assign(variable, value);
+		rootNode.addChild(assign);
+		
+		return this;
+	}
+	
+	public PHPParserHandler handleConstant(PHPParserState state) throws ParserException {
+		Literal nameNode = (Literal) state.getNode("name");
+		ASTNode value = state.getNode("value");
+		
+		String name = nameNode.getToken();
+		Variable variable = new Variable(name);
+		
+		VariableDeclaration varDecl = new VariableDeclaration(variable);
+		varDecl.addTypeDeclarator("const");
+		rootNode.addChild(varDecl);
 		
 		Assign assign = new Assign(variable, value);
 		rootNode.addChild(assign);
@@ -141,14 +161,28 @@ public class PHPStatementHandler implements PHPParserHandler {
 	}
 	
 	public PHPParserHandler handleUse(PHPParserState state) throws ParserException {
-		ASTNode nsName = state.getNode("ns_name");
-		ASTNode nsAlias = state.getNodeOptional("new_name");
+		ASTNode nsNameNode = state.getNode("ns_name");
+		ASTNode nsAliasNode = state.getNodeOptional("new_name");
 		
-		UseStatement useNode = new UseStatement((NamespaceName) nsName, (NamespaceName) nsAlias);
+		UseStatement useNode = new UseStatement(toNamespaceName(nsNameNode), 
+											    toNamespaceName(nsAliasNode));
 		
 		rootNode.addChild(useNode);
 		
 		return this;
+	}
+	
+	private NamespaceName toNamespaceName(ASTNode node) {
+		if(node != null && node instanceof Literal) {
+			String nsName = ((Literal) node).getToken();
+			NamespaceName nsNode = new NamespaceName();
+			
+			nsNode.addComponent(nsName);
+			
+			return nsNode;
+		}
+		
+		return (NamespaceName) node;
 	}
 
 	public PHPParserHandler handleTry(PHPParserState state) throws ParserException {
