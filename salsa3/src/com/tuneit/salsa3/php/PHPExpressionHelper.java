@@ -22,6 +22,11 @@ public class PHPExpressionHelper {
 	private static final int ZEND_IS_SMALLER = 19;
 	private static final int ZEND_IS_SMALLER_OR_EQUAL = 20;
 
+	private static final int ZEND_PRE_INC = 34;
+	private static final int ZEND_PRE_DEC = 35;
+	private static final int ZEND_POST_INC = 36;
+	private static final int ZEND_POST_DEC = 37;
+	
 	private static final int ZEND_ISSET = 0x02000000;
 	private static final int ZEND_ISEMPTY = 0x01000000;
 	
@@ -33,6 +38,9 @@ public class PHPExpressionHelper {
 	private static final int IS_OBJECT = 5;
 	private static final int IS_STRING = 6;
 
+	private static final int ZEND_BW_NOT = 12;
+	private static final int ZEND_BOOL_NOT = 13;
+	
 	// private static ASTNode genericNode = new ASTNode();
 	
 	/**
@@ -44,6 +52,24 @@ public class PHPExpressionHelper {
 	public static PHPParserHandler handleState(PHPParserState state, PHPParserHandler handler) throws ParserException {
 		if(state.isState("binary_op")) {
 			return PHPExpressionHelper.handleBinaryOperation(state, handler);
+		}
+		else if(state.isState("boolean_and_end")) {
+			return PHPExpressionHelper.handleBooleanOperation(state, handler, BinaryOperation.Type.BOP_LOGICAL_AND);
+		}
+		else if(state.isState("boolean_or_end")) {
+			return PHPExpressionHelper.handleBooleanOperation(state, handler, BinaryOperation.Type.BOP_LOGICAL_OR);
+		}
+		else if(state.isState("incdec")) {
+			return PHPExpressionHelper.handleIncrementDecrement(state, handler);
+		}
+		else if(state.isState("add_function")) {
+			return PHPExpressionHelper.handleUnaryAddSub(state, handler, UnaryOperation.Type.UOP_PLUS);
+		}
+		else if(state.isState("sub_function")) {
+			return PHPExpressionHelper.handleUnaryAddSub(state, handler, UnaryOperation.Type.UOP_MINUS);
+		}
+		else if(state.isState("unary_op")) {
+			return PHPExpressionHelper.handleUnaryOperation(state, handler);
 		}
 		else if(state.isState("begin_function_call") || state.isState("begin_class_member_function_call")) {
 			return PHPExpressionHelper.handleFunctionCall(state, handler);
@@ -104,6 +130,23 @@ public class PHPExpressionHelper {
 		
 		int bopType = state.getIntParam("op");
 		
+		handleBinaryOperationHelper(getBinaryOpType(bopType), result, op1, op2);
+		
+		return handler;
+	}
+	
+	private static PHPParserHandler handleBooleanOperation(PHPParserState state, PHPParserHandler handler, 
+					BinaryOperation.Type opType) throws ParserException {
+		ASTNode result = state.getNode("result");
+		ASTNode expr1 = state.getNode("expr1");
+		ASTNode expr2 = state.getNode("expr2");
+		
+		handleBinaryOperationHelper(opType, result, expr1, expr2);
+		
+		return handler;
+	}
+	
+	private static void handleBinaryOperationHelper(BinaryOperation.Type opType, ASTNode result, ASTNode op1, ASTNode op2) throws ParserException {
 		if(result == op1) {
 			op1 = op1.cloneNode();
 		}
@@ -111,9 +154,50 @@ public class PHPExpressionHelper {
 			op2 = op2.cloneNode();
 		}
 		
-		BinaryOperation bop = new BinaryOperation(getBinaryOpType(bopType), op1, op2);
+		BinaryOperation bop = new BinaryOperation(opType, op1, op2);
 		
 		result.setNode(bop);
+	}
+	
+	private static PHPParserHandler handleIncrementDecrement(PHPParserState state, PHPParserHandler handler) throws ParserException {
+		int incdecType = state.getIntParam("op");
+		
+		ASTNode op = state.getNode("op1");
+		ASTNode result = state.getNode("result");
+		
+		op = op.cloneNode();
+		
+		UnaryOperation uop = new UnaryOperation(getIncdecOpType(incdecType), op);
+		
+		result.setNode(uop);
+		
+		return handler;
+	}
+	
+	private static PHPParserHandler handleUnaryAddSub(PHPParserState state, PHPParserHandler handler, UnaryOperation.Type type) throws ParserException {
+		ASTNode op = state.getNode("z_op1");
+		ASTNode result = state.getNode("z_result");
+		
+		op = op.cloneNode();
+		
+		UnaryOperation uop = new UnaryOperation(type, op);
+		
+		result.setNode(uop);
+		
+		return handler;
+	}
+	
+	private static PHPParserHandler handleUnaryOperation(PHPParserState state, PHPParserHandler handler) throws ParserException {
+		int uopType = state.getIntParam("op");
+		
+		ASTNode op = state.getNode("op1");
+		ASTNode result = state.getNode("result");
+		
+		op = op.cloneNode();
+		
+		UnaryOperation uop = new UnaryOperation(getUnaryOpType(uopType), op);
+		
+		result.setNode(uop);
 		
 		return handler;
 	}
@@ -235,6 +319,32 @@ public class PHPExpressionHelper {
 		result.setNode(cast);
 		
 		return handler;
+	}
+	
+	private static UnaryOperation.Type getIncdecOpType(int uopType) throws ParserException {
+		switch(uopType) {
+		case ZEND_PRE_INC:
+		        return UnaryOperation.Type.UOP_PRE_INCREMENT;
+		case ZEND_PRE_DEC:
+		        return UnaryOperation.Type.UOP_PRE_DECREMENT;
+		case ZEND_POST_INC:
+		        return UnaryOperation.Type.UOP_POST_INCREMENT;
+		case ZEND_POST_DEC:
+	        return UnaryOperation.Type.UOP_POST_DECREMENT;
+		}
+		
+		throw new ParserException("Unsupported unary inc-dec type " + uopType + "!");
+	}
+	
+	private static UnaryOperation.Type getUnaryOpType(int uopType) throws ParserException {
+		switch(uopType) {
+		case ZEND_BW_NOT:
+		        return UnaryOperation.Type.UOP_BIT_NOT;
+		case ZEND_BOOL_NOT:
+		        return UnaryOperation.Type.UOP_LOGICAL_NOT;
+		}
+		
+		throw new ParserException("Unsupported unary operation type " + uopType + "!");
 	}
 	
 	private static BinaryOperation.Type getBinaryOpType(int bopType) throws ParserException {

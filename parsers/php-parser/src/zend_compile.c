@@ -9,6 +9,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stddef.h>
 
 zend_compiler_globals cg;
 
@@ -16,6 +17,8 @@ zend_compiler_globals cg;
 #ifdef SALSA3_PHP_DEBUG
 int token_debug;
 #endif
+
+#define container_of(ptr, type, member) ((type*) ((char*)ptr - offsetof(type, member)))
 
 /* Depending of type of quote chars (single of double), opposite quotes may not be escaped:
  * 'Some text in "quotes"', but we set is_escaped because it is PHP literal. Double check
@@ -333,13 +336,21 @@ void zend_do_for_end(const znode *second_semicolon_token TSRMLS_DC) /* {{{ */
 
 void zend_do_pre_incdec(znode *result, const znode *op1, zend_uchar op TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("incdec");
+	salsa3_dump_int_param(op);
+	salsa3_dump_znode(result);
+	salsa3_dump_znode(op1);
+	salsa3_end();
 }
 /* }}} */
 
 void zend_do_post_incdec(znode *result, const znode *op1, zend_uchar op TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("incdec");
+	salsa3_dump_int_param(op);
+	salsa3_dump_znode(result);
+	salsa3_dump_znode(op1);
+	salsa3_end();
 }
 /* }}} */
 
@@ -1312,10 +1323,26 @@ again:
 }
 
 int add_function(zval *result, zval *op1, zval *op2 TSRMLS_DC) {
+	znode* z_result = container_of(result, znode, u.constant);
+	znode* z_op1 = container_of(result, znode, u.constant);
+
+	salsa3_begin("add_function");
+	salsa3_dump_znode(z_result);
+	salsa3_dump_znode(z_op1);
+	salsa3_end();
+
 	return 0;
 }
 
 int sub_function(zval *result, zval *op1, zval *op2 TSRMLS_DC) {
+	znode* z_result = container_of(result, znode, u.constant);
+	znode* z_op1 = container_of(result, znode, u.constant);
+
+	salsa3_begin("sub_function");
+	salsa3_dump_znode(z_result);
+	salsa3_dump_znode(z_op1);
+	salsa3_end();
+
 	return 0;
 }
 

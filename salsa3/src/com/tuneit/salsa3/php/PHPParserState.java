@@ -25,6 +25,8 @@ public final class PHPParserState {
 		"check_writable_variable",
 		"fetch_simple_variable",
 		"extended_fcall_end",
+		"boolean_and_begin",
+		"boolean_or_begin",
 		"initialize_try_catch_element",
 		"first_catch",
 		"bind_catch"
