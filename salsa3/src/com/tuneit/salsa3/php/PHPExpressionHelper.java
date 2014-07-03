@@ -24,6 +24,14 @@ public class PHPExpressionHelper {
 
 	private static final int ZEND_ISSET = 0x02000000;
 	private static final int ZEND_ISEMPTY = 0x01000000;
+	
+	private static final int IS_NULL = 0;
+	private static final int IS_LONG = 1;
+	private static final int IS_DOUBLE = 2;
+	private static final int IS_BOOL = 3;
+	private static final int IS_ARRAY = 4;
+	private static final int IS_OBJECT = 5;
+	private static final int IS_STRING = 6;
 
 	// private static ASTNode genericNode = new ASTNode();
 	
@@ -64,6 +72,9 @@ public class PHPExpressionHelper {
 		else if(state.isState("add_array_element")) {
 			return PHPExpressionHelper.handleArrayElement(state, handler);
 		}
+		else if(state.isState("cast")) {
+			return PHPExpressionHelper.handleCast(state, handler);
+		}		
 		else if(state.isGenericState()) {
 			return handler;
 		}
@@ -212,6 +223,20 @@ public class PHPExpressionHelper {
 		return handler;
 	}
 	
+	private static PHPParserHandler handleCast(PHPParserState state, PHPParserHandler handler) throws ParserException {
+		int type = state.getIntParam("type");
+		
+		ASTNode expr = state.getNode("expr");
+		ASTNode result = state.getNode("result");
+		
+		String typeName = PHPExpressionHelper.getCastType(type);
+		Cast cast = new Cast(new TypeName(typeName), expr);
+		
+		result.setNode(cast);
+		
+		return handler;
+	}
+	
 	private static BinaryOperation.Type getBinaryOpType(int bopType) throws ParserException {
 		switch(bopType) {
 		case ZEND_ADD:
@@ -252,5 +277,24 @@ public class PHPExpressionHelper {
 		}
 		
 		throw new ParserException("Unsupported binary optype " + bopType + "!");
+	}
+	
+	private static String getCastType(int type) throws ParserException  {
+		switch(type) {
+		case IS_LONG:
+			return "int";
+		case IS_DOUBLE:
+			return "double";
+		case IS_BOOL:
+			return "bool";
+		case IS_ARRAY:
+			return "array";
+		case IS_OBJECT:
+			return "object";
+		case IS_NULL:
+			return "unset";
+		}
+		
+		throw new ParserException("Unsupported cast type " + type + "!");
 	}
 }

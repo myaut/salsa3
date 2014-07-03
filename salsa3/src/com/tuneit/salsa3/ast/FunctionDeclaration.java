@@ -6,28 +6,12 @@ import java.util.List;
 import com.tuneit.salsa3.ast.FunctionCall.Argument;
 
 public class FunctionDeclaration extends ASTStatement {
-	public class Argument {
-		public String name;
-		public List<String> typeDeclarators;
-		public ASTNode defaultValue;
-		
-		public Argument(String name) {
-			this.name = name;
-			this.defaultValue = null;
-			this.typeDeclarators = new ArrayList<String>();
-		}
-		
-		public void addTypeDeclarator(String declarator) {
-			typeDeclarators.add(declarator);
-		}
-	}
-	
 	private String functionName;
 	
 	private List<String> returnTypeDeclarators;
 	private List<String> functionDeclarators;
 	
-	private List<Argument> arguments;
+	private List<VariableDeclaration> arguments;
 	
 	public FunctionDeclaration(String functionName) {
 		this.functionName = functionName;
@@ -35,7 +19,7 @@ public class FunctionDeclaration extends ASTStatement {
 		this.returnTypeDeclarators = new ArrayList<String>();
 		this.functionDeclarators = new ArrayList<String>();
 		
-		this.arguments = new ArrayList<Argument>();
+		this.arguments = new ArrayList<VariableDeclaration>();
 	}
 	
 	public void addReturnTypeDeclarator(String declarator) {
@@ -46,15 +30,14 @@ public class FunctionDeclaration extends ASTStatement {
 		functionDeclarators.add(declarator);
 	}
 	
-	public Argument addArgument(String name) {
-		Argument arg = new Argument(name);
+	public VariableDeclaration addArgument(String name, String typeName) {
+		VariableDeclaration arg = new VariableDeclaration(new Variable(name), typeName);
 		arguments.add(arg);
 		return arg;
 	}
 	
-	public Argument addArgument(String name, ASTNode defaultValue) {
-		Argument arg = new Argument(name);
-		arg.defaultValue = defaultValue;
+	public VariableDeclaration addArgument(String name, String typeName, ASTNode defaultValue) {
+		VariableDeclaration arg = new VariableDeclaration(new Variable(name), typeName, defaultValue);
 		arguments.add(arg);
 		return arg;
 	}
@@ -71,7 +54,7 @@ public class FunctionDeclaration extends ASTStatement {
 		return functionDeclarators;
 	}
 	
-	public List<Argument> getArguments() {
+	public List<VariableDeclaration> getArguments() {
 		return arguments;
 	}
 	
@@ -83,8 +66,8 @@ public class FunctionDeclaration extends ASTStatement {
 		
 		sb.append(", args=[");
 		
-		for(Argument argument : arguments) {
-			sb.append(argument.name);
+		for(VariableDeclaration argument : arguments) {
+			sb.append(argument.toString());			
 			sb.append(", ");
 		}
 		

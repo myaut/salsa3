@@ -39,8 +39,7 @@ public class PHPTryHandler extends PHPStatementHandler implements
 			Literal classNameNode = (Literal) state.getNode("class_name");
 			Variable variable = (Variable) state.getNode("catch_var");
 			
-			VariableDeclaration varDecl = new VariableDeclaration(variable);
-			varDecl.addTypeDeclarator(classNameNode.getToken());
+			VariableDeclaration varDecl = new VariableDeclaration(variable, classNameNode.getToken());
 			
 			TryStatement.CatchStatement catchStatement = new TryStatement.CatchStatement(varDecl);
 			

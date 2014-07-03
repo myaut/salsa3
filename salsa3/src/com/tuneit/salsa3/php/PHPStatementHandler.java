@@ -23,6 +23,8 @@ public class PHPStatementHandler implements PHPParserHandler {
 	private static final int ZEND_INCLUDE_ONCE = 1 << 2;
 	private static final int ZEND_REQUIRE = 1 << 3;
 	private static final int ZEND_REQUIRE_ONCE = 1 << 4;
+	
+	private static final int ZEND_FETCH_STATIC = 0x20000000;
 
 	@Override
 	public PHPParserHandler handleState(PHPParserState state) throws ParserException {
@@ -67,6 +69,9 @@ public class PHPStatementHandler implements PHPParserHandler {
 		else if(state.isState("end_finally")) {
 			/* Finally was not started, spurious state - ignore */
 		}
+		else if(state.isState("fetch_static_variable")) {
+			return this.handleFetchStaticVariable(state);
+		}
 		
 		return PHPExpressionHelper.handleState(state, this);
 	}
@@ -100,12 +105,9 @@ public class PHPStatementHandler implements PHPParserHandler {
 		String name = nameNode.getToken();
 		Variable variable = new Variable(name);
 		
-		VariableDeclaration varDecl = new VariableDeclaration(variable);
-		varDecl.addTypeDeclarator("const");
+		VariableDeclaration varDecl = new VariableDeclaration(variable, "", value);
+		varDecl.addTypeQualifier("const");
 		rootNode.addChild(varDecl);
-		
-		Assign assign = new Assign(variable, value);
-		rootNode.addChild(assign);
 		
 		return this;
 	}
@@ -149,7 +151,7 @@ public class PHPStatementHandler implements PHPParserHandler {
 		return this;
 	}
 	
-	public PHPParserHandler handleIfCondition(PHPParserState state) throws ParserException {
+	private PHPParserHandler handleIfCondition(PHPParserState state) throws ParserException {
 		PHPIfHandler ifHandler = new PHPIfHandler(this);
 		PHPParserHandler newHandler = ifHandler.handleState(state);
 		
@@ -160,7 +162,7 @@ public class PHPStatementHandler implements PHPParserHandler {
 		return newHandler;
 	}
 	
-	public PHPParserHandler handleUse(PHPParserState state) throws ParserException {
+	private PHPParserHandler handleUse(PHPParserState state) throws ParserException {
 		ASTNode nsNameNode = state.getNode("ns_name");
 		ASTNode nsAliasNode = state.getNodeOptional("new_name");
 		
@@ -185,7 +187,7 @@ public class PHPStatementHandler implements PHPParserHandler {
 		return (NamespaceName) node;
 	}
 
-	public PHPParserHandler handleTry(PHPParserState state) throws ParserException {
+	private PHPParserHandler handleTry(PHPParserState state) throws ParserException {
 		PHPTryHandler tryHandler = new PHPTryHandler(this);
 		PHPParserHandler newHandler = tryHandler.handleState(state);
 		
@@ -196,18 +198,44 @@ public class PHPStatementHandler implements PHPParserHandler {
 		return newHandler;
 	}
 	
-	public PHPParserHandler handleBeginFinally(PHPParserState state) throws ParserException {
+	private PHPParserHandler handleBeginFinally(PHPParserState state) throws ParserException {
 		PHPFinallyHandler finallyHandler = new PHPFinallyHandler(this);
 		PHPParserHandler newHandler = finallyHandler.handleState(state);
 		
 		return newHandler;
 	}
 	
-	public PHPParserHandler handleThrow(PHPParserState state) throws ParserException {
+	private PHPParserHandler handleThrow(PHPParserState state) throws ParserException {
 		ASTNode throwObject = state.getNode("expr");		
 		Throw throwStatement = new Throw(throwObject);
 		
 		rootNode.addChild(throwStatement);
+		
+		return this;
+	}
+	
+	private PHPParserHandler handleFetchStaticVariable(PHPParserState state) throws ParserException {
+		int fetchType = state.getIntParam("fetch_type");
+		
+		Variable varName = (Variable) state.getNode("varname");
+		ASTNode staticAssignment = state.getNodeOptional("static_assignment");
+	
+		VariableDeclaration varDecl = null;
+		
+		if(fetchType != ZEND_FETCH_STATIC) {
+			throw new ParserException("Unknown static variable fetch type " + fetchType + "!");
+		}
+		
+		if(staticAssignment == null) {
+			varDecl = new VariableDeclaration(varName, "");
+		}
+		else {
+			varDecl = new VariableDeclaration(varName, "", staticAssignment);
+		}
+		
+		varDecl.addTypeQualifier("static");
+		
+		rootNode.addChild(varDecl);
 		
 		return this;
 	}

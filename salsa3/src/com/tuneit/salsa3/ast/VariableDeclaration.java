@@ -5,40 +5,55 @@ import java.util.ArrayList;
 
 public class VariableDeclaration extends ASTNode {
 	private Variable variable;
-	private List<String> typeDeclarators;
+	private TypeName typeName;
+	private ASTNode defaultValue;
 	
-	public VariableDeclaration(Variable var) {
+	public VariableDeclaration(Variable var, String typeName) {
 		this.variable = var;
-		this.typeDeclarators = new ArrayList<String>();
+		this.typeName = new TypeName(typeName);
+		this.defaultValue = null;
+	}
+	
+	public VariableDeclaration(Variable var, String typeName, ASTNode defaultValue) {
+		this.variable = var;
+		this.typeName = new TypeName(typeName);
+		this.defaultValue = defaultValue;
 	}
 
 	public Variable getVariable() {
 		return variable;
 	}
 	
-	public void addTypeDeclarator(String declarator) {
-		this.typeDeclarators.add(declarator);
+	public void addTypeQualifier(String qualifier) {
+		this.typeName.addTypeQualifier(qualifier);
 	}
 	
-	public List<String> getTypeDeclarators() {
-		return this.typeDeclarators;
+	public List<String> getTypeQualifiers() {
+		return typeName.getTypeQualifiers();
 	}
 	
+	public ASTNode getDefaultValue() {
+		return defaultValue;
+	}
+
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		
-		sb.append("VariableDeclaration [var=");
-		sb.append(variable.toString());
+		sb.append("VD [");
 		
-		sb.append(", declarators=");		
-		for(String declarator : typeDeclarators) {
-			sb.append(declarator);
-			sb.append(",");
+		sb.append(variable);
+		sb.append(" : ");
+		sb.append(typeName);
+		
+		if(defaultValue != null) {
+			sb.append(" = ");
+			sb.append(defaultValue);
 		}
 		
-		sb.append("]]");
+		sb.append("]");
 		
 		return sb.toString();
 	}
+
 }

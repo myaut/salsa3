@@ -5,6 +5,7 @@ import com.tuneit.salsa3.ast.ASTNode;
 import com.tuneit.salsa3.ast.FunctionDeclaration;
 import com.tuneit.salsa3.ast.Literal;
 import com.tuneit.salsa3.ast.Variable;
+import com.tuneit.salsa3.ast.VariableDeclaration;
 
 public class PHPFunctionDeclaration extends PHPStatementHandler {	
 	private static final int ZEND_RECV = 63;
@@ -39,23 +40,31 @@ public class PHPFunctionDeclaration extends PHPStatementHandler {
 		else if(state.isState("receive_arg")) {
 			int op = state.getIntParam("op");
 			int passByReference = state.getIntParam("pass_by_reference");
+			
 			Variable varName = (Variable) state.getNode("varname");
-			FunctionDeclaration.Argument argument = null;
+			ASTNode classType = state.getNodeOptional("class_type"); 
+			
+			VariableDeclaration argument = null;
+			String typeName = "";
+			
+			if(classType != null) {
+				typeName = ((Literal) classType).getToken();
+			}
 			
 			switch(op) {
 			case ZEND_RECV:
-				argument = fdecl.addArgument(varName.getVarName());
+				argument = fdecl.addArgument(varName.getVarName(), typeName);
 				break;
 			case ZEND_RECV_INIT:
 				ASTNode defaultValue = state.getNode("initialization");
-				argument = fdecl.addArgument(varName.getVarName(), defaultValue);
+				argument = fdecl.addArgument(varName.getVarName(), typeName, defaultValue);
 				break;
 			default:
 				throw new ParserException("Invalid receive_arg op " + op + "!");
 			}
 			
 			if(passByReference == 1) {
-				argument.addTypeDeclarator("&");
+				argument.addTypeQualifier("&");
 			}
 			
 			return this;
