@@ -600,7 +600,7 @@ void zend_do_first_catch(znode *open_parentheses TSRMLS_DC) /* {{{ */
 
 void zend_initialize_try_catch_element(znode *catch_token TSRMLS_DC) /* {{{ */
 {
-	salsa3_begin("try");
+	salsa3_begin("initialize_try_catch_element");
 	salsa3_dump_znode(catch_token);
 	salsa3_end();
 }
@@ -608,7 +608,7 @@ void zend_initialize_try_catch_element(znode *catch_token TSRMLS_DC) /* {{{ */
 
 void zend_do_mark_last_catch(const znode *first_catch, const znode *last_additional_catch TSRMLS_DC) /* {{{ */
 {
-	salsa3_begin("end_catch");
+	salsa3_begin("mark_last_catch");
 	salsa3_dump_znode(first_catch);
 	/* FIXME: salsa3_dump_znode(last_additional_catch); */
 	salsa3_end();

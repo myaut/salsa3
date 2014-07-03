@@ -21,7 +21,7 @@ public class PHPExpressionHelper {
 	private static final int ZEND_IS_NOT_EQUAL = 18;
 	private static final int ZEND_IS_SMALLER = 19;
 	private static final int ZEND_IS_SMALLER_OR_EQUAL = 20;
-	
+
 	private static final int ZEND_ISSET = 0x02000000;
 	private static final int ZEND_ISEMPTY = 0x01000000;
 

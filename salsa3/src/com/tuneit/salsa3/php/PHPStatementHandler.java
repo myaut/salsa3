@@ -6,6 +6,18 @@ import com.tuneit.salsa3.ast.*;
 public class PHPStatementHandler implements PHPParserHandler {
 	private ASTStatement rootNode = null;
 	
+	private static final int ZEND_ASSIGN_ADD  = 23;
+	private static final int ZEND_ASSIGN_SUB  = 24;
+	private static final int ZEND_ASSIGN_MUL  = 25;
+	private static final int ZEND_ASSIGN_DIV  = 26;
+	private static final int ZEND_ASSIGN_MOD  = 27;
+	private static final int ZEND_ASSIGN_SL  = 28;
+	private static final int ZEND_ASSIGN_SR  = 29;
+	private static final int ZEND_ASSIGN_CONCAT  = 30;
+	private static final int ZEND_ASSIGN_BW_OR  = 31;
+	private static final int ZEND_ASSIGN_BW_AND  = 32;
+	private static final int ZEND_ASSIGN_BW_XOR  = 33;
+	
 	private static final int ZEND_EVAL = 1 << 0;
 	private static final int ZEND_INCLUDE = 1 << 1;
 	private static final int ZEND_INCLUDE_ONCE = 1 << 2;
@@ -18,7 +30,18 @@ public class PHPStatementHandler implements PHPParserHandler {
 			return this.handleEcho(state);
 		}
 		else if(state.isState("assign")) {
+			/* SALSA considers assign and binary_assign_op as statement. Despite the fact
+			 * they may be used in expression context, i.e:
+			 * 		f($a = 1)
+			 * It would nicely split into two statements:
+			 * 		$a = 1
+			 * 		f($a)
+			 * which is equivalent to upper example. This may be hacked like function calls did,
+			 * but this approach is easier. */
 			return this.handleAssign(state);
+		}
+		else if(state.isState("binary_assign_op")) {
+			return this.handleAssignWithBinaryOp(state);
 		}
 		else if(state.isState("if_cond")) {
 			return this.handleIfCondition(state);
@@ -28,6 +51,18 @@ public class PHPStatementHandler implements PHPParserHandler {
 		}
 		else if(state.isState("use")) {
 			return this.handleUse(state);
+		}
+		else if(state.isState("try")) {
+			return this.handleTry(state);
+		}
+		else if(state.isState("finally")) {
+			return this.handleBeginFinally(state);
+		}
+		else if(state.isState("throw")) {
+			return this.handleThrow(state);
+		}
+		else if(state.isState("end_finally")) {
+			/* Finally was not started, spurious state - ignore */
 		}
 		
 		return PHPExpressionHelper.handleState(state, this);
@@ -49,9 +84,20 @@ public class PHPStatementHandler implements PHPParserHandler {
 		ASTNode value = state.getNode("value");
 		ASTNode variable = state.getNode("variable");
 		
-		/* Do not do node-replacement here, ignore 'result' */
-		
 		Assign assign = new Assign(variable, value);
+		rootNode.addChild(assign);
+		
+		return this;
+	}
+	
+	public PHPParserHandler handleAssignWithBinaryOp(PHPParserState state) throws ParserException {
+		int op = state.getIntParam("op");
+		ASTNode value = state.getNode("op2");
+		ASTNode variable = state.getNode("op1");
+		
+		AssignWithBinaryOperation assign = 
+				new AssignWithBinaryOperation(PHPStatementHandler.getAssignBinaryOpType(op), 
+											  variable, value);
 		rootNode.addChild(assign);
 		
 		return this;
@@ -105,6 +151,33 @@ public class PHPStatementHandler implements PHPParserHandler {
 		return this;
 	}
 
+	public PHPParserHandler handleTry(PHPParserState state) throws ParserException {
+		PHPTryHandler tryHandler = new PHPTryHandler(this);
+		PHPParserHandler newHandler = tryHandler.handleState(state);
+		
+		ASTNode tryNode = tryHandler.getRootNode();
+		
+		rootNode.addChild(tryNode);
+		
+		return newHandler;
+	}
+	
+	public PHPParserHandler handleBeginFinally(PHPParserState state) throws ParserException {
+		PHPFinallyHandler finallyHandler = new PHPFinallyHandler(this);
+		PHPParserHandler newHandler = finallyHandler.handleState(state);
+		
+		return newHandler;
+	}
+	
+	public PHPParserHandler handleThrow(PHPParserState state) throws ParserException {
+		ASTNode throwObject = state.getNode("expr");		
+		Throw throwStatement = new Throw(throwObject);
+		
+		rootNode.addChild(throwStatement);
+		
+		return this;
+	}
+	
 	@Override
 	public ASTNode getRootNode() {
 		return rootNode;
@@ -112,5 +185,34 @@ public class PHPStatementHandler implements PHPParserHandler {
 	
 	public void setRootNode(ASTStatement rootNode) {
 		this.rootNode = rootNode;
+	}
+	
+	private static BinaryOperation.Type getAssignBinaryOpType(int bopType) throws ParserException {
+		switch(bopType) {
+		case ZEND_ASSIGN_ADD:
+		        return BinaryOperation.Type.BOP_ADD;
+		case ZEND_ASSIGN_SUB:
+		        return BinaryOperation.Type.BOP_SUB;
+		case ZEND_ASSIGN_MUL:
+		        return BinaryOperation.Type.BOP_MULTIPLY;
+		case ZEND_ASSIGN_DIV:
+		        return BinaryOperation.Type.BOP_DIVIDE;
+		case ZEND_ASSIGN_MOD:
+		        return BinaryOperation.Type.BOP_MODULO;
+		case ZEND_ASSIGN_SL:
+		        return BinaryOperation.Type.BOP_SHIFT_LEFT;
+		case ZEND_ASSIGN_SR:
+		        return BinaryOperation.Type.BOP_SHIFT_RIGHT;
+		case ZEND_ASSIGN_CONCAT:
+		        return BinaryOperation.Type.BOP_ADD;
+		case ZEND_ASSIGN_BW_OR:
+		        return BinaryOperation.Type.BOP_BIT_OR;
+		case ZEND_ASSIGN_BW_AND:
+		        return BinaryOperation.Type.BOP_BIT_AND;
+		case ZEND_ASSIGN_BW_XOR:
+		        return BinaryOperation.Type.BOP_BIT_XOR;	
+		}
+		
+		throw new ParserException("Unsupported binary optype " + bopType + "!");
 	}
 }

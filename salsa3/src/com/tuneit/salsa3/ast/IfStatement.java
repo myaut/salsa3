@@ -7,8 +7,8 @@ import java.util.List;
 
 public class IfStatement extends ASTStatement {
 	public class Branch {
-		ASTNode condition;
-		ASTStatement branch;
+		public ASTNode condition;
+		public ASTStatement branch;
 		
 		public Branch() {
 			condition = null;
