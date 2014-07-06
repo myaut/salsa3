@@ -873,31 +873,45 @@ void zend_do_brk_cont(zend_uchar op, const znode *expr TSRMLS_DC) /* {{{ */
 
 void zend_do_switch_cond(const znode *cond TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("switch_cond");
+	salsa3_dump_znode(cond);
+	salsa3_end();
 }
 /* }}} */
 
 void zend_do_switch_end(const znode *case_list TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("switch_end");
+	salsa3_dump_znode(case_list);
+	salsa3_end();
 }
 /* }}} */
 
 void zend_do_case_before_statement(const znode *case_list, znode *case_token, const znode *case_expr TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("case_before_statement");
+	salsa3_dump_znode(case_list);
+	salsa3_dump_znode(case_token);
+	salsa3_dump_znode(case_expr);
+	salsa3_end();
 }
 /* }}} */
 
 void zend_do_case_after_statement(znode *result, const znode *case_token TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("case_after_statement");
+	salsa3_dump_znode(result);
+	salsa3_dump_znode(case_token);
+	salsa3_end();
 }
 /* }}} */
 
 void zend_do_default_before_statement(const znode *case_list, znode *default_token TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("default_before_statement");
+	salsa3_dump_znode(case_list);
+	salsa3_dump_znode(default_token);
+	salsa3_end();
 }
 /* }}} */
 

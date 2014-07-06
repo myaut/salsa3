@@ -54,6 +54,9 @@ public class PHPStatementHandler implements PHPParserHandler {
 		else if(state.isState("if_cond")) {
 			return this.handleIfCondition(state);
 		}
+		else if(state.isState("switch_cond")) {
+			return this.handleSwitch(state);
+		}
 		else if(state.isState("while_cond")) {
 			return this.handleWhile(state);
 		}
@@ -262,6 +265,17 @@ public class PHPStatementHandler implements PHPParserHandler {
 		ASTNode forNode = foreachHandler.getRootNode();
 		
 		rootNode.addChild(forNode);
+		
+		return newHandler;
+	}
+	
+	private PHPParserHandler handleSwitch(PHPParserState state) throws ParserException {
+		PHPSwitchHandler switchHandler = new PHPSwitchHandler(this);
+		PHPParserHandler newHandler = switchHandler.handleState(state);
+		
+		ASTNode switchNode = switchHandler.getRootNode();
+		
+		rootNode.addChild(switchNode);
 		
 		return newHandler;
 	}

@@ -90,7 +90,7 @@ public final class PHPParser {
 					System.err.println("State " + state.state + " wasn't matched! ");
 				}
 				
-				System.out.println(handler + " " + state.state); 
+				// System.out.println(handler + " " + state.state); 
 			}
 			
 			int exitValue = process.waitFor();
