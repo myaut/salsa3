@@ -37,7 +37,7 @@ public class ZNode2AST {
 	private ASTNode doConvert(ZNode zNode) throws ParserException {
 		switch(zNode.type) {
 		case IS_STRING:
-			return new Literal(Literal.Type.LIT_STRING, zNode.value, zNode.value);
+			return new Literal(Literal.Type.LIT_STRING, zNode.value);
 		case IS_LONG:
 			return new Literal(Literal.Type.LIT_LONG, zNode.value);
 		case IS_BOOL:

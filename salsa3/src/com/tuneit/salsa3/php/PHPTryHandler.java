@@ -4,6 +4,7 @@ import com.tuneit.salsa3.ParserException;
 import com.tuneit.salsa3.ast.ASTNode;
 import com.tuneit.salsa3.ast.Literal;
 import com.tuneit.salsa3.ast.TryStatement;
+import com.tuneit.salsa3.ast.TypeName;
 import com.tuneit.salsa3.ast.Variable;
 import com.tuneit.salsa3.ast.VariableDeclaration;
 
@@ -39,7 +40,7 @@ public class PHPTryHandler extends PHPStatementHandler implements
 			Literal classNameNode = (Literal) state.getNode("class_name");
 			Variable variable = (Variable) state.getNode("catch_var");
 			
-			VariableDeclaration varDecl = new VariableDeclaration(variable, classNameNode.getToken());
+			VariableDeclaration varDecl = new VariableDeclaration(variable, new TypeName(classNameNode.getToken()));
 			
 			TryStatement.CatchStatement catchStatement = new TryStatement.CatchStatement(varDecl);
 			

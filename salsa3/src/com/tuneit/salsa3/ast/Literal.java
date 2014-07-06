@@ -1,5 +1,8 @@
 package com.tuneit.salsa3.ast;
 
+import com.tuneit.salsa3.ast.serdes.ASTNodeSerdes;
+import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesPlan;
+
 public class Literal extends ASTNode {
 	public enum Type {
 		LIT_NULL,
@@ -10,30 +13,17 @@ public class Literal extends ASTNode {
 		LIT_CHARACTER
 	};
 	
-	private Object data;
 	private String token;
 	private Type type;
 	
 	public Literal(Type type, String token) {
 		super();
-		this.data = null;
-		this.token = token;
-		this.type = type;
-	}
-	
-	public Literal(Type type, String token, Object data) {
-		super();
-		this.data = data;
 		this.token = token;
 		this.type = type;
 	}
 	
 	public ASTNode clone() {
-		return new Literal(type, token, data);
-	}
-
-	public Object getData() {
-		return data;
+		return new Literal(type, token);
 	}
 
 	public String getToken() {
@@ -87,5 +77,12 @@ public class Literal extends ASTNode {
 		}
 		
 		return sb.toString();
+	}
+	
+	/* Serialization code */
+	static {
+		ASTNodeSerdesPlan plan = ASTNodeSerdes.newPlan(Literal.class);
+		plan.addEnumParam(0, "type", false, Type.class);
+		plan.addStringParam(1, "token", false);
 	}
 }

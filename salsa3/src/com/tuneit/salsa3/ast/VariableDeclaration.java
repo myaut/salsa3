@@ -3,25 +3,32 @@ package com.tuneit.salsa3.ast;
 import java.util.List;
 import java.util.ArrayList;
 
+import com.tuneit.salsa3.ast.serdes.ASTNodeSerdes;
+import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesPlan;
+
 public class VariableDeclaration extends ASTNode {
 	private Variable variable;
 	private TypeName typeName;
 	private ASTNode defaultValue;
 	
-	public VariableDeclaration(Variable var, String typeName) {
+	public VariableDeclaration(Variable var, TypeName typeName) {
 		this.variable = var;
-		this.typeName = new TypeName(typeName);
+		this.typeName = typeName;
 		this.defaultValue = null;
 	}
 	
-	public VariableDeclaration(Variable var, String typeName, ASTNode defaultValue) {
+	public VariableDeclaration(Variable var, TypeName typeName, ASTNode defaultValue) {
 		this.variable = var;
-		this.typeName = new TypeName(typeName);
+		this.typeName = typeName;
 		this.defaultValue = defaultValue;
 	}
 
 	public Variable getVariable() {
 		return variable;
+	}
+	
+	public TypeName getTypeName() {
+		return typeName;
 	}
 	
 	public void addTypeQualifier(String qualifier) {
@@ -56,4 +63,11 @@ public class VariableDeclaration extends ASTNode {
 		return sb.toString();
 	}
 
+	/* Serialization code */
+	static {
+		ASTNodeSerdesPlan plan = ASTNodeSerdes.newPlan(VariableDeclaration.class);
+		plan.addStringParam(0, "variable", false);
+		plan.addNodeParam(1, "typeName", false);
+		plan.addNodeParam(2, "defaultValue", true);
+	}
 }

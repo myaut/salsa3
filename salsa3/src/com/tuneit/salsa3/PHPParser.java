@@ -7,11 +7,15 @@ import java.io.InputStreamReader;
 import java.lang.ProcessBuilder.Redirect;
 import java.util.HashMap;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONException;
 
 import com.tuneit.salsa3.ast.ASTNode;
 import com.tuneit.salsa3.ast.ASTStatement;
+import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesException;
+import com.tuneit.salsa3.ast.serdes.ASTStatementJSONSerializer;
+import com.tuneit.salsa3.ast.serdes.ASTStatementSerializer;
 import com.tuneit.salsa3.php.*;
 
 public final class PHPParser {
@@ -28,7 +32,7 @@ public final class PHPParser {
 		this.zNode2AST = new ZNode2AST();
 	}
 	
-	public void parse() throws ParserException {
+	public void parse() throws ParserException, ASTNodeSerdesException {
 		ProcessBuilder processBuilder = new ProcessBuilder(PHPParser.phpParserBinary, this.filePath);		
 		processBuilder.redirectOutput(Redirect.PIPE);
 		processBuilder.redirectError(Redirect.INHERIT);
@@ -98,9 +102,12 @@ public final class PHPParser {
 				throw new ParserException("Parser error: return code = " + exitValue);
 			}
 			
-			ASTStatement rootNode = (ASTStatement) handler.getRootNode();
-			rootNode.filterReused();
-			rootNode.dumpStatement(System.out);
+			ASTStatementSerializer serializer = new ASTStatementJSONSerializer();
+			ASTStatement root = (ASTStatement) handler.getRootNode();
+			
+			JSONObject array = (JSONObject) root.serializeStatement(serializer);
+			
+			System.out.println(array.toString(4));
 		}
 		catch(InterruptedException ie) {
 			ParserException pe = new ParserException("Parser process was interrupted", ie);
@@ -116,7 +123,7 @@ public final class PHPParser {
 		}
 	}
 	
-	public static void main(String[] args) {
+	public static void main(String[] args) throws ASTNodeSerdesException {
 		PHPParser parser = new PHPParser(args[0]);
 		
 		try {

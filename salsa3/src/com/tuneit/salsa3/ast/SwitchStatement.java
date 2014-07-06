@@ -7,6 +7,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
+import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesException;
+import com.tuneit.salsa3.ast.serdes.ASTStatementSerializer;
+
 public class SwitchStatement extends ASTStatement {
 	public static class Case {
 		public ASTNode pattern;
@@ -47,13 +50,11 @@ public class SwitchStatement extends ASTStatement {
 	}
 	
 	@Override
-	public void dumpStatement(OutputStream os, String indent) {
-		PrintStream s = new PrintStream(os);
+	public Object serializeStatement(ASTStatementSerializer serializer) throws ASTNodeSerdesException {
+		Object switchStatement = serializer.createStatement(this);
 		
 		ListIterator<Case> caseIterator = cases.listIterator();
 		ListIterator<ASTNode> nodeIterator = getChildren().listIterator();
-		
-		String nodeIndent = indent + TABSTOP;
 		
 		/* Iterate over nodes in this statement.
 		 * If case references current node through iterator, print case
@@ -71,26 +72,18 @@ public class SwitchStatement extends ASTStatement {
 					break;					
 				}
 				
-				s.print(indent);
 				if(kase.pattern == null) {
-					s.println("default");
+					serializer.addSpecialNode(switchStatement, "default", null);
 				}
 				else {
-					s.print("case ");
-					s.println(kase.pattern.toString());
+					serializer.addSpecialNode(switchStatement, "case", kase.pattern);
 				}
 			}
 			
-			s.print(nodeIndent);
-			s.println(node.toString());
-			
-			if(node instanceof ASTStatement) {
-				ASTStatement stmt = (ASTStatement) node;
-				stmt.dumpStatement(os, nodeIndent + TABSTOP);
-				
-				s.println();
-			}
+			serializeStatementNode(serializer, switchStatement, node);
 		}
+		
+		return switchStatement;
 	}
 	
 }

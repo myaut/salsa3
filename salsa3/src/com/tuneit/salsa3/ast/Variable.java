@@ -1,5 +1,7 @@
 package com.tuneit.salsa3.ast;
 
+import com.tuneit.salsa3.ast.serdes.*;
+
 public class Variable extends ASTNode {
 	private String varName;
 	
@@ -19,4 +21,10 @@ public class Variable extends ASTNode {
 	public String toString() {
 		return "Variable [varName=" + varName + "]";
 	}
+	
+	/* Serialization code */
+	static {
+		ASTNodeSerdesPlan plan = ASTNodeSerdes.newPlan(Variable.class);
+		plan.addStringParam(0, "varName", false);
+	}	
 }

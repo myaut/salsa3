@@ -127,7 +127,7 @@ public class PHPStatementHandler implements PHPParserHandler {
 		String name = nameNode.getToken();
 		Variable variable = new Variable(name);
 		
-		VariableDeclaration varDecl = new VariableDeclaration(variable, "", value);
+		VariableDeclaration varDecl = new VariableDeclaration(variable, new TypeName("mixed"), value);
 		varDecl.addTypeQualifier("const");
 		rootNode.addChild(varDecl);
 		
@@ -338,10 +338,10 @@ public class PHPStatementHandler implements PHPParserHandler {
 		}
 		
 		if(staticAssignment == null) {
-			varDecl = new VariableDeclaration(varName, "");
+			varDecl = new VariableDeclaration(varName, new TypeName("mixed"));
 		}
 		else {
-			varDecl = new VariableDeclaration(varName, "", staticAssignment);
+			varDecl = new VariableDeclaration(varName, new TypeName("mixed"), staticAssignment);
 		}
 		
 		varDecl.addTypeQualifier("static");

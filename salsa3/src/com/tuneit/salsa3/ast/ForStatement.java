@@ -4,6 +4,8 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 
 import com.tuneit.salsa3.ast.IfStatement.Branch;
+import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesException;
+import com.tuneit.salsa3.ast.serdes.ASTStatementSerializer;
 
 public class ForStatement extends ASTStatement {
 	private ASTNode condition;
@@ -57,18 +59,18 @@ public class ForStatement extends ASTStatement {
 	}
 	
 	@Override 
-	public void dumpStatement(OutputStream os, String indent) {
-		PrintStream s = new PrintStream(os);
-	
-		s.print(indent);
-		s.println("init: ");
-		initializationStatement.dumpStatement(os, indent + ASTStatement.TABSTOP);
+	public Object serializeStatement(ASTStatementSerializer serializer) throws ASTNodeSerdesException {
+		Object forStatement = serializer.createStatement(this); 
 		
-		s.print(indent);
-		s.println("increment: ");
-		incrementStatement.dumpStatement(os, indent + ASTStatement.TABSTOP);
+		serializer.addSpecialNode(forStatement, "init", null);
+		initializationStatement.serializeStatementChildren(serializer, forStatement);
 		
-		super.dumpStatement(os, indent);
+		serializer.addSpecialNode(forStatement, "increment", null);
+		incrementStatement.serializeStatementChildren(serializer, forStatement);		
+		
+		serializeStatementChildren(serializer, forStatement);
+		
+		return forStatement;
 	}
 	
 	@Override

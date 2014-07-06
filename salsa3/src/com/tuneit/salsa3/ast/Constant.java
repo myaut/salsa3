@@ -1,5 +1,8 @@
 package com.tuneit.salsa3.ast;
 
+import com.tuneit.salsa3.ast.serdes.ASTNodeSerdes;
+import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesPlan;
+
 public class Constant extends ASTNode {
 	private String constName;
 	
@@ -18,5 +21,10 @@ public class Constant extends ASTNode {
 	@Override
 	public String toString() {
 		return "Constant [constName=" + constName + "]";
+	}
+	
+	static {
+		ASTNodeSerdesPlan plan = ASTNodeSerdes.newPlan(Constant.class);
+		plan.addStringParam(0, "constName", false);
 	}
 }

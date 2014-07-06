@@ -5,6 +5,9 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesException;
+import com.tuneit.salsa3.ast.serdes.ASTStatementSerializer;
+
 public class TryStatement extends ASTStatement {
 	public static class CatchStatement extends ASTStatement {
 		public VariableDeclaration varDecl;
@@ -34,29 +37,23 @@ public class TryStatement extends ASTStatement {
 	}
 	
 	@Override 
-	public void dumpStatement(OutputStream os, String indent) {
-		PrintStream s = new PrintStream(os);
+	public Object serializeStatement(ASTStatementSerializer serializer) throws ASTNodeSerdesException {
+		Object tryStatement = serializer.createStatement(this);
 		
-		s.print(indent);
-		s.println("try ");
-		super.dumpStatement(os, indent + ASTStatement.TABSTOP);
+		serializer.addSpecialNode(tryStatement, "try", null);
+		serializeStatementChildren(serializer, tryStatement);
 		
 		for(CatchStatement katch : catches) {
-			s.print(indent);
-			s.print("catch ");
-			if(katch.varDecl != null) {
-				s.println(katch.varDecl.toString());
-			}
-			
-			katch.dumpStatement(os, indent + ASTStatement.TABSTOP);
+			serializer.addSpecialNode(tryStatement, "try", katch.varDecl);
+			katch.serializeStatementChildren(serializer, tryStatement);
 		}
 	
 		if(finallyStatement != null) {
-			s.print(indent);
-			s.println("finally");
-			
-			finallyStatement.dumpStatement(os, indent + ASTStatement.TABSTOP);
+			serializer.addSpecialNode(tryStatement, "finally", null);
+			finallyStatement.serializeStatementChildren(serializer, tryStatement);
 		}
+		
+		return tryStatement;
 	}
 	
 	@Override

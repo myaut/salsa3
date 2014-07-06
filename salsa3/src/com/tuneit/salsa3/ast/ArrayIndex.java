@@ -1,5 +1,8 @@
 package com.tuneit.salsa3.ast;
 
+import com.tuneit.salsa3.ast.serdes.ASTNodeSerdes;
+import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesPlan;
+
 public class ArrayIndex extends ASTNode {
 	private ASTNode array;
 	private ASTNode index;
@@ -25,5 +28,12 @@ public class ArrayIndex extends ASTNode {
 	@Override
 	public String toString() {
 		return "ArrayIndex [array=" + array + ", index=" + index + "]";
+	}
+	
+	/* Serialization code */
+	static {
+		ASTNodeSerdesPlan plan = ASTNodeSerdes.newPlan(ArrayIndex.class);
+		plan.addNodeParam(0, "array", false);
+		plan.addNodeParam(1, "index", false);
 	}
 }

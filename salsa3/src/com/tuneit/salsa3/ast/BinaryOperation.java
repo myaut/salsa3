@@ -1,5 +1,9 @@
 package com.tuneit.salsa3.ast;
 
+import com.tuneit.salsa3.ast.Literal.Type;
+import com.tuneit.salsa3.ast.serdes.ASTNodeSerdes;
+import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesPlan;
+
 public class BinaryOperation extends ASTNode implements Cloneable {
 	public enum Type {
 		/* Bit operations */
@@ -67,5 +71,13 @@ public class BinaryOperation extends ASTNode implements Cloneable {
 	public String toString() {
 		return "BinaryOperation [left=" + left + ", right=" + right + ", type="
 				+ type + "]";
+	}
+	
+	/* Serialization code */
+	static {
+		ASTNodeSerdesPlan plan = ASTNodeSerdes.newPlan(BinaryOperation.class);
+		plan.addEnumParam(0, "type", false, Type.class);
+		plan.addNodeParam(1, "left", false);
+		plan.addNodeParam(2, "right", false);
 	}
 }

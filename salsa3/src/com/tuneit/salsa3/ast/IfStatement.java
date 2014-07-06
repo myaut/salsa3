@@ -5,13 +5,23 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.tuneit.salsa3.ast.serdes.ASTNodeSerdes;
+import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesException;
+import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesPlan;
+import com.tuneit.salsa3.ast.serdes.ASTStatementSerializer;
+
 public class IfStatement extends ASTStatement {
-	public class Branch extends ASTStatement {
+	public static class Branch extends ASTStatement {
 		public ASTNode condition;
 		
 		public Branch() {
 			super();
 			condition = null;
+		}
+		
+		/* Serialization code */
+		static {
+			ASTNodeSerdesPlan plan = ASTNodeSerdes.newPlan(Branch.class);
 		}
 	};
 	
@@ -52,25 +62,27 @@ public class IfStatement extends ASTStatement {
 	}
 	
 	@Override 
-	public void dumpStatement(OutputStream os, String indent) {
-		PrintStream s = new PrintStream(os);
+	public Object serializeStatement(ASTStatementSerializer serializer) throws ASTNodeSerdesException {
+		Object ifStatement = serializer.createStatement(this);
 		
 		for(Branch branch : branches) {
-			s.print(indent);
-			s.print("if ");
-			s.println(branch.condition.toString());
-			
-			branch.dumpStatement(os, indent + ASTStatement.TABSTOP);
+			serializer.addSpecialNode(ifStatement, "if", branch.condition);			
+			branch.serializeStatementChildren(serializer, ifStatement);
 		}
 	
-		s.print(indent);
-		s.println("else");
+		serializer.addSpecialNode(ifStatement, "else", null);
+		elseBranch.serializeStatementChildren(serializer, ifStatement);
 		
-		elseBranch.dumpStatement(os, indent + ASTStatement.TABSTOP);
+		return ifStatement;
 	}
 	
 	@Override
 	public String toString() {
 		return "IfStatement";
 	}
+	
+	/* Serialization code */
+	static {
+		ASTNodeSerdesPlan plan = ASTNodeSerdes.newPlan(IfStatement.class);
+	}	
 }
