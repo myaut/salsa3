@@ -287,7 +287,11 @@ void zend_do_echo(const znode *arg TSRMLS_DC) /* {{{ */
 
 void zend_do_abstract_method(const znode *function_name, znode *modifiers, const znode *body TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("echo");
+	salsa3_dump_znode(function_name);
+	salsa3_dump_znode(modifiers);
+	salsa3_dump_znode(body);
+	salsa3_end();
 }
 /* }}} */
 
@@ -512,7 +516,9 @@ int zend_do_begin_function_call(znode *function_name, zend_bool check_namespace 
 
 void zend_do_begin_method_call(znode *left_bracket TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("begin_method_call");
+	salsa3_dump_znode(left_bracket);
+	salsa3_end();
 }
 /* }}} */
 
@@ -543,7 +549,9 @@ void zend_do_resolve_class_name(znode *result, znode *class_name, int is_static 
 
 void zend_do_fetch_class(znode *result, znode *class_name TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("fetch_class");
+	salsa3_dump_znode(class_name);
+	salsa3_end();
 }
 /* }}} */
 
@@ -917,19 +925,27 @@ void zend_do_default_before_statement(const znode *case_list, znode *default_tok
 
 void zend_do_begin_class_declaration(const znode *class_token, znode *class_name, const znode *parent_class_name TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("begin_class_declaration");
+	salsa3_dump_znode(class_token);
+	salsa3_dump_znode(class_name);
+	salsa3_dump_znode(parent_class_name);
+	salsa3_end();
 }
 /* }}} */
 
 void zend_do_end_class_declaration(const znode *class_token, const znode *parent_token TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("end_class_declaration");
+	salsa3_dump_znode(parent_token);
+	salsa3_end();
 }
 /* }}} */
 
 void zend_do_implements_interface(znode *interface_name TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("begin_class_declaration");
+	salsa3_dump_znode(interface_name);
+	salsa3_end();
 }
 /* }}} */
 
@@ -953,19 +969,30 @@ ZEND_API int zend_unmangle_property_name_ex(const char *mangled_property, int le
 
 void zend_do_declare_property(const znode *var_name, const znode *value, zend_uint access_type TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("declare_property");
+	salsa3_dump_int_param(access_type);
+	salsa3_dump_znode(var_name);
+	salsa3_dump_znode(value);
+	salsa3_end();
 }
 /* }}} */
 
 void zend_do_declare_class_constant(znode *var_name, const znode *value TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("declare_class_constant");
+	salsa3_dump_znode(var_name);
+	salsa3_dump_znode(value);
+	salsa3_end();
 }
 /* }}} */
 
 void zend_do_fetch_property(znode *result, znode *object, const znode *property TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("fetch_property");
+	salsa3_dump_znode(result);
+	salsa3_dump_znode(object);
+	salsa3_dump_znode(property);
+	salsa3_end();
 }
 /* }}} */
 
@@ -977,37 +1004,36 @@ void zend_do_halt_compiler_register(TSRMLS_D) /* {{{ */
 
 void zend_do_push_object(const znode *object TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("push_object");
+	salsa3_dump_znode(object);
+	salsa3_end();
 }
 /* }}} */
 
 void zend_do_pop_object(znode *object TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("pop_object");
+	salsa3_dump_znode(object);
+	salsa3_end();
 }
 /* }}} */
 
 void zend_do_begin_new_object(znode *new_token, znode *class_type TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("begin_new_object");
+	salsa3_dump_znode(new_token);
+	salsa3_dump_znode(class_type);
+	salsa3_end();
 }
 /* }}} */
 
 void zend_do_end_new_object(znode *result, const znode *new_token, const znode *argument_list TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
-}
-/* }}} */
-
-static zend_constant* zend_get_ct_const(const zval *const_name, int all_internal_constants_substitution TSRMLS_DC) /* {{{ */
-{
-	salsa3_unimplimented();
-}
-/* }}} */
-
-static int zend_constant_ct_subst(znode *result, zval *const_name, int all_internal_constants_substitution TSRMLS_DC) /* {{{ */
-{
-	salsa3_unimplimented();
+	salsa3_begin("end_new_object");
+	salsa3_dump_znode(result);
+	salsa3_dump_znode(new_token);
+	salsa3_dump_znode(argument_list);
+	salsa3_end();
 }
 /* }}} */
 
@@ -1282,7 +1308,8 @@ void zend_do_extended_info(TSRMLS_D) /* {{{ */
 
 void zend_do_extended_fcall_begin(TSRMLS_D) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("extended_fcall_begin");
+	salsa3_end();
 }
 /* }}} */
 
