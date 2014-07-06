@@ -224,6 +224,7 @@ typedef unsigned long zend_ulong;
 /* Extensions from SALSA3 */
 #define IS_CONSTANT_ARRAY	11
 #define IS_VARIABLE			12
+#define IS_TOKEN			13
 
 static void* emalloc(size_t sz) {
 	return malloc(sz);

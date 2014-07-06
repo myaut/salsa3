@@ -25,6 +25,9 @@ public class PHPStatementHandler implements PHPParserHandler {
 	private static final int ZEND_REQUIRE_ONCE = 1 << 4;
 	
 	private static final int ZEND_FETCH_STATIC = 0x20000000;
+	
+	private static final int ZEND_BRK  = 50;
+	private static final int ZEND_CONT  = 51;
 
 	@Override
 	public PHPParserHandler handleState(PHPParserState state) throws ParserException {
@@ -51,6 +54,21 @@ public class PHPStatementHandler implements PHPParserHandler {
 		else if(state.isState("if_cond")) {
 			return this.handleIfCondition(state);
 		}
+		else if(state.isState("while_cond")) {
+			return this.handleWhile(state);
+		}
+		else if(state.isState("do_while_begin")) {
+			return this.handleDoWhile(state);
+		}
+		else if(state.isState("for_begin")) {
+			return this.handleFor(state);
+		}
+		else if(state.isState("foreach_begin")) {
+			return this.handleForeach(state);
+		}
+		else if(state.isState("brk_cont")) {
+			return this.handleBreakContinue(state);
+		}
 		else if(state.isState("include_or_eval")) {
 			return this.handleIncludeOrEval(state);
 		}
@@ -61,7 +79,8 @@ public class PHPStatementHandler implements PHPParserHandler {
 			return this.handleTry(state);
 		}
 		else if(state.isState("finally")) {
-			return this.handleBeginFinally(state);
+			PHPFinallyHandler finallyHandler = new PHPFinallyHandler(this);
+			return finallyHandler.handleState(state);
 		}
 		else if(state.isState("throw")) {
 			return this.handleThrow(state);
@@ -162,6 +181,91 @@ public class PHPStatementHandler implements PHPParserHandler {
 		return newHandler;
 	}
 	
+	private PHPParserHandler handleWhile(PHPParserState state) throws ParserException {
+		PHPWhileHandler whileHandler = new PHPWhileHandler(this);
+		PHPParserHandler newHandler = whileHandler.handleState(state);
+		
+		ASTNode whileNode = whileHandler.getRootNode();
+		
+		rootNode.addChild(whileNode);
+		
+		return newHandler;
+	}
+	
+	private PHPParserHandler handleDoWhile(PHPParserState state) throws ParserException {
+		PHPDoWhileHandler doWhileHandler = new PHPDoWhileHandler(this);
+		PHPParserHandler newHandler = doWhileHandler.handleState(state);
+		
+		ASTNode doWhileNode = doWhileHandler.getRootNode();
+		
+		rootNode.addChild(doWhileNode);
+		
+		return newHandler;
+	}
+	
+	private PHPParserHandler handleBreakContinue(PHPParserState state) throws ParserException {
+		int op = state.getIntParam("op");
+		ASTNode nestingNode = state.getNodeOptional("expr");
+		ASTNode stmt = null;
+		int nesting = 1;
+		
+		if(nestingNode != null) {
+			Literal litNesting = (Literal) nestingNode;
+			try {
+				nesting = Integer.valueOf(litNesting.getToken());
+			}
+			catch(NumberFormatException e) {
+				throw new ParserException("Invalid nesting expression: " + litNesting.getToken() + "!", e);
+			}
+		}
+		
+		if(op == ZEND_BRK) {
+			if(nestingNode == null) {
+				stmt = new BreakStatement();
+			}
+			else {				
+				stmt = new BreakStatement(nesting);
+			}
+		}
+		else if(op == ZEND_CONT) {
+			if(nestingNode == null) {
+				stmt = new ContinueStatement();
+			}
+			else {
+				stmt = new ContinueStatement(nesting);
+			}
+		} 
+		else {
+			throw new ParserException("Unknown break/continue op " + op + "!");
+		}
+		
+		rootNode.addChild(stmt);
+		
+		return this;
+	}
+	
+	private PHPParserHandler handleFor(PHPParserState state) throws ParserException {
+		PHPForHandler forHandler = new PHPForHandler(this);
+		PHPParserHandler newHandler = forHandler.handleState(state);
+		
+		ASTNode forNode = forHandler.getRootNode();
+		
+		rootNode.addChild(forNode);
+		
+		return newHandler;
+	}
+	
+	private PHPParserHandler handleForeach(PHPParserState state) throws ParserException {
+		PHPForeachHandler foreachHandler = new PHPForeachHandler(this);
+		PHPParserHandler newHandler = foreachHandler.handleState(state);
+		
+		ASTNode forNode = foreachHandler.getRootNode();
+		
+		rootNode.addChild(forNode);
+		
+		return newHandler;
+	}
+	
 	private PHPParserHandler handleUse(PHPParserState state) throws ParserException {
 		ASTNode nsNameNode = state.getNode("ns_name");
 		ASTNode nsAliasNode = state.getNodeOptional("new_name");
@@ -194,13 +298,6 @@ public class PHPStatementHandler implements PHPParserHandler {
 		ASTNode tryNode = tryHandler.getRootNode();
 		
 		rootNode.addChild(tryNode);
-		
-		return newHandler;
-	}
-	
-	private PHPParserHandler handleBeginFinally(PHPParserState state) throws ParserException {
-		PHPFinallyHandler finallyHandler = new PHPFinallyHandler(this);
-		PHPParserHandler newHandler = finallyHandler.handleState(state);
 		
 		return newHandler;
 	}

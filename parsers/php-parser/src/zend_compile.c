@@ -71,7 +71,7 @@ static void _salsa3_dump_int_param(const char* name, int param) {
 }
 
 static void _salsa3_dump_znode(const char* name, const znode* arg) {
-	if(arg == NULL)
+	if(arg == NULL || arg->op_type == IS_UNUSED)
 		return;
 
 	printf(", \"%s\" : {\"nodeid\": %lu", name, arg->nodeid);
@@ -80,6 +80,9 @@ static void _salsa3_dump_znode(const char* name, const znode* arg) {
 		const zval* zv = &arg->u.constant;
 
 		switch(zv->type) {
+		case IS_TOKEN:
+			printf(", \"value\": \"%s\"", zv->token);
+			break;
 		case IS_LONG:
 			if(zv->token != NULL)
 				printf(", \"value\": \"%s\"", zv->token);
@@ -306,31 +309,51 @@ void zend_do_assign_ref(znode *result, const znode *lvar, const znode *rvar TSRM
 
 void zend_do_while_cond(const znode *expr, znode *close_bracket_token TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("while_cond");
+	salsa3_dump_znode(expr);
+	salsa3_dump_znode(close_bracket_token);
+	salsa3_end();
 }
 /* }}} */
 
 void zend_do_while_end(const znode *while_token, const znode *close_bracket_token TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("while_end");
+	salsa3_dump_znode(while_token);
+	salsa3_dump_znode(close_bracket_token);
+	salsa3_end();
 }
 /* }}} */
 
+void zend_do_for_begin(TSRMLS_DC) /* {{{ */
+{
+	salsa3_begin("for_begin");
+	salsa3_end();
+}
+
 void zend_do_for_cond(const znode *expr, znode *second_semicolon_token TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("for_cond");
+	salsa3_dump_znode(expr);
+	salsa3_dump_znode(second_semicolon_token);
+	salsa3_end();
 }
 /* }}} */
 
 void zend_do_for_before_statement(const znode *cond_start, const znode *second_semicolon_token TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("for_before_statement");
+	salsa3_dump_znode(cond_start);
+	salsa3_dump_znode(second_semicolon_token);
+	salsa3_end();
 }
 /* }}} */
 
 void zend_do_for_end(const znode *second_semicolon_token TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("for_end");
+	salsa3_dump_znode(second_semicolon_token);
+	salsa3_end();
 }
 /* }}} */
 
@@ -824,19 +847,27 @@ void zend_do_boolean_and_end(znode *result, const znode *expr1, const znode *exp
 
 void zend_do_do_while_begin(TSRMLS_D) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("do_while_begin");
+	salsa3_end();
 }
 /* }}} */
 
 void zend_do_do_while_end(const znode *do_token, const znode *expr_open_bracket, const znode *expr TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("do_while_end");
+	salsa3_dump_znode(do_token);
+	salsa3_dump_znode(expr_open_bracket);
+	salsa3_dump_znode(expr);
+	salsa3_end();
 }
 /* }}} */
 
 void zend_do_brk_cont(zend_uchar op, const znode *expr TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("brk_cont");
+	salsa3_dump_int_param(op);
+	salsa3_dump_znode(expr);
+	salsa3_end();
 }
 /* }}} */
 
@@ -1131,19 +1162,34 @@ void zend_do_instanceof(znode *result, const znode *expr, const znode *class_zno
 
 void zend_do_foreach_begin(znode *foreach_token, znode *open_brackets_token, znode *array, znode *as_token, int variable TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("foreach_begin");
+	salsa3_dump_int_param(variable);
+	salsa3_dump_znode(foreach_token);
+	salsa3_dump_znode(open_brackets_token);
+	salsa3_dump_znode(array);
+	salsa3_dump_znode(as_token);
+	salsa3_end();
 }
 /* }}} */
 
 void zend_do_foreach_cont(znode *foreach_token, const znode *open_brackets_token, const znode *as_token, znode *value, znode *key TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("foreach_cont");
+	salsa3_dump_znode(foreach_token);
+	salsa3_dump_znode(open_brackets_token);
+	salsa3_dump_znode(as_token);
+	salsa3_dump_znode(value);
+	salsa3_dump_znode(key);
+	salsa3_end();
 }
 /* }}} */
 
 void zend_do_foreach_end(const znode *foreach_token, const znode *as_token TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("foreach_end");
+	salsa3_dump_znode(foreach_token);
+	salsa3_dump_znode(as_token);
+	salsa3_end();
 }
 /* }}} */
 

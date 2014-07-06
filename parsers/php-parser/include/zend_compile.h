@@ -199,6 +199,7 @@ void zend_do_if_cond(const znode *cond, znode *closing_bracket_token TSRMLS_DC);
 void zend_do_if_after_statement(const znode *closing_bracket_token, unsigned char initialize TSRMLS_DC);
 void zend_do_if_end(TSRMLS_D);
 
+void zend_do_for_begin(TSRMLS_DC);
 void zend_do_for_cond(const znode *expr, znode *second_semicolon_token TSRMLS_DC);
 void zend_do_for_before_statement(const znode *cond_start, const znode *second_semicolon_token TSRMLS_DC);
 void zend_do_for_end(const znode *second_semicolon_token TSRMLS_DC);

@@ -589,6 +589,8 @@ NEWLINE ("\r"|"\n"|"\r\n")
 }
 
 <ST_IN_SCRIPTING>{TOKENS} {
+	zendlval->token = estrndup(yytext, 1);
+	zendlval->type = IS_TOKEN;
 	return yytext[0];
 }
 

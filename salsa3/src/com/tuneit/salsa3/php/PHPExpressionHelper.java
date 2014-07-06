@@ -170,6 +170,7 @@ public class PHPExpressionHelper {
 		UnaryOperation uop = new UnaryOperation(getIncdecOpType(incdecType), op);
 		
 		result.setNode(uop);
+		addChildToHandler(uop, handler);
 		
 		return handler;
 	}

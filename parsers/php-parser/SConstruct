@@ -1,7 +1,12 @@
 import os
+import sys
 from SCons.Errors import StopError 
 
+def BuildPath(self, path):
+    return os.path.join('build', path)
+
 env = DefaultEnvironment()
+env.AddMethod(BuildPath)
 
 AddOption('--with-php', dest='php_root', action='store', metavar='PATH',
           help='Path to PHP interpreter source containing zend_language_parser.y')
@@ -14,31 +19,39 @@ if not php_root or not os.path.isdir(php_root):
 
 # Copy YACC file from original PHP interpreter and build it
 def PhpCopy(filename):
-    return env.Command(os.path.join('build', os.path.basename(filename)), 
+    return env.Command(env.BuildPath(os.path.basename(filename)), 
                        os.path.join(php_root, filename),
                        Copy("$TARGET", "$SOURCE"))
+    
 
 zend_language_parser_y = PhpCopy('Zend/zend_language_parser.y')
+
+ParserModifier = Builder(action = '%s modparser.py $SOURCE > $TARGET' % sys.executable)
+env.Append(BUILDERS = {'ParserModifier' : ParserModifier})
+
+zend_language_parser_modified_y = env.ParserModifier(source = env.BuildPath('zend_language_parser.y'),
+                                                     target = env.BuildPath('zend_language_parser_modified.y'))
+
 zend_stack_h = PhpCopy('Zend/zend_stack.h')
 zend_stack_c = PhpCopy('Zend/zend_stack.c')
 zend_ptr_stack_h = PhpCopy('Zend/zend_ptr_stack.h')
 zend_ptr_stack_c = PhpCopy('Zend/zend_ptr_stack.c')
 
 # FIXME: If Bison/YACC/Re2C are not installed, this fails with exception -- print nice error message
-zend_language_parser_c = env.CFile(source = zend_language_parser_y, 
-                                   target = ['build/zend_language_parser.c',
-                                             'build/zend_language_parser.h'])
-zend_language_scanner_c = env.CFile(source = 'build/zend_language_scanner.re2c',
-                                    target = ['build/zend_language_scanner.c',
-                                              'build/zend_language_scanner_defs.h'])
+zend_language_parser_c = env.CFile(source = zend_language_parser_modified_y, 
+                                   target = [env.BuildPath('zend_language_parser.c'),
+                                             env.BuildPath('zend_language_parser.h')])
+zend_language_scanner_c = env.CFile(source = env.BuildPath('zend_language_scanner.re2c'),
+                                    target = [env.BuildPath('zend_language_scanner.c'),
+                                              env.BuildPath('zend_language_scanner_defs.h')])
 
 # Have to be an option
 env.Append(CFLAGS = ['-DSALSA3_PHP_DEBUG', '-g', '-DYYDEBUG=1'])
 
-env.Append(CPPPATH = ['include/', 'build/'])
+env.Append(CPPPATH = ['include/', 'build'])
 env.Append(CFLAGS = ['-Werror-implicit-function-declaration'])
-env.Append(YACCFLAGS = ['--defines=build/zend_language_parser.h'])
-env.Append(RE2CFLAGS = ['--case-inverted', '-cbdF', '-t', 'build/zend_language_scanner_defs.h'])
+env.Append(YACCFLAGS = ['--defines=' + env.BuildPath('zend_language_parser.h')])
+env.Append(RE2CFLAGS = ['--case-inverted', '-cbdF', '-t', env.BuildPath('zend_language_scanner_defs.h')])
 
-env.Program(target = 'build/salsa3-php-parser', 
-            source = Glob('build/*.c'))
+env.Program(target = env.BuildPath('salsa3-php-parser'), 
+            source = Glob(env.BuildPath('*.c')))
