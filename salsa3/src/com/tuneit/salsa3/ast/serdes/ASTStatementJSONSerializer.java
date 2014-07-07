@@ -5,12 +5,12 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.tuneit.salsa3.ast.ASTNode;
+import com.tuneit.salsa3.ast.ASTStatement;
 
 public class ASTStatementJSONSerializer implements ASTStatementSerializer {
 	public static String AST_STMT_STATE = "_stmtstate";
 	public static String AST_STMT_NODE = "_stmtnode";
 	public static String AST_STMT_STMTS = "_stmts";
-	public static String AST_STMT_STMT = "_stmt";
 	
 	private static ASTNodeSerializer nodeSerializer = new ASTNodeJSONSerializer();
 	
@@ -22,7 +22,7 @@ public class ASTStatementJSONSerializer implements ASTStatementSerializer {
 		
 		try {
 			jsonStatement.put(AST_STMT_NODE, jsonNode);
-			jsonStatement.put(AST_STMT_STMT, array);
+			jsonStatement.put(AST_STMT_STMTS, array);
 		
 		} catch (JSONException e) {
 			throw new ASTNodeSerdesException("JSON error!", e);
@@ -40,18 +40,9 @@ public class ASTStatementJSONSerializer implements ASTStatementSerializer {
 	}
 	
 	@Override
-	public void addStatement(Object stmt, ASTNode node, Object subStatement) throws ASTNodeSerdesException  {
+	public void addStatement(Object stmt, ASTStatement node, Object subStatement) throws ASTNodeSerdesException  {
 		JSONArray array = getArrayFromStatement(stmt);
-		JSONObject jsonNode = (JSONObject) ASTNodeSerdes.serializeNode(nodeSerializer, node);
-		JSONObject jsonStatement = new JSONObject();
-		
-		try {
-			jsonStatement.put(AST_STMT_NODE, jsonNode);
-			jsonStatement.put(AST_STMT_STMTS, subStatement);
-		
-		} catch (JSONException e) {
-			throw new ASTNodeSerdesException("JSON error!", e);
-		}
+		JSONObject jsonStatement = (JSONObject) node.serializeStatement(this);
 		
 		array.put(jsonStatement);
 	}
@@ -79,7 +70,7 @@ public class ASTStatementJSONSerializer implements ASTStatementSerializer {
 		JSONObject jsonStatement = (JSONObject) stmt;
 		
 		try {
-			return (JSONArray) jsonStatement.get(AST_STMT_STMT);
+			return (JSONArray) jsonStatement.get(AST_STMT_STMTS);
 		} catch (JSONException e) {
 			throw new ASTNodeSerdesException("JSON error!", e);
 		}

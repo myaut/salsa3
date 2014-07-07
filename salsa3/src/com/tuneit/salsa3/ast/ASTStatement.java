@@ -48,11 +48,16 @@ public class ASTStatement extends ASTNode {
 			ASTStatement stmt = (ASTStatement) node;
 			Object subStatement = stmt.serializeStatement(serializer);
 			
-			serializer.addStatement(statement, node, subStatement);
+			serializer.addStatement(statement, stmt, subStatement);
 		}
 		else {
 			serializer.addNode(statement, node);
 		}
+	}
+	
+	public void deserializeState(String state, ASTNode node) throws ASTNodeSerdesException {
+		throw new ASTNodeSerdesException("Couldn't deserialize state " + state + 
+							"for statement" + this.getClass().getName() + "!");
 	}
 	
 	@Override

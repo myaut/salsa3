@@ -14,7 +14,9 @@ import org.json.JSONException;
 import com.tuneit.salsa3.ast.ASTNode;
 import com.tuneit.salsa3.ast.ASTStatement;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesException;
+import com.tuneit.salsa3.ast.serdes.ASTStatementJSONDeserializer;
 import com.tuneit.salsa3.ast.serdes.ASTStatementJSONSerializer;
+import com.tuneit.salsa3.ast.serdes.ASTStatementSerdes;
 import com.tuneit.salsa3.ast.serdes.ASTStatementSerializer;
 import com.tuneit.salsa3.php.*;
 
@@ -105,9 +107,11 @@ public final class PHPParser {
 			ASTStatementSerializer serializer = new ASTStatementJSONSerializer();
 			ASTStatement root = (ASTStatement) handler.getRootNode();
 			
-			JSONObject array = (JSONObject) root.serializeStatement(serializer);
+			JSONObject jso = (JSONObject) root.serializeStatement(serializer);
 			
-			System.out.println(array.toString(4));
+			System.out.println(jso.toString(4));
+			
+			ASTStatement newRoot = ASTStatementSerdes.deserializeStatement(new ASTStatementJSONDeserializer(), jso);
 		}
 		catch(InterruptedException ie) {
 			ParserException pe = new ParserException("Parser process was interrupted", ie);
