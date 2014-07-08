@@ -57,6 +57,21 @@ public class IfStatement extends ASTStatement {
 	}
 	
 	@Override
+	public void deserializeState(String state, ASTNode node) throws ASTNodeSerdesException {
+		if(state.equals("if")) {
+			beginBranch(node);
+			return;
+		}
+		else if(state.equals("else")) {
+			beginElseBranch();
+			return;
+		}
+		
+		// Let parent throw an exception
+		super.deserializeState(state, node);
+	}
+	
+	@Override
 	public void addChild(ASTNode child) {
 		this.currentBranch.addChild(child);
 	}

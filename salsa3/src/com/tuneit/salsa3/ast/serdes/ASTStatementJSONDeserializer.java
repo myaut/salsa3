@@ -40,12 +40,12 @@ public class ASTStatementJSONDeserializer implements ASTStatementDeserializer {
 	}
 	
 	@Override
-	public ASTStatement getStatementNode(Object o) throws ASTNodeSerdesException {
+	public ASTStatement getStatementNode(ASTNodeDeserializer nodeDeserializer, Object o) throws ASTNodeSerdesException {
 		JSONObject jsonNode = (JSONObject) o;
 		
 		try {
 			JSONObject stmtNode = jsonNode.getJSONObject(ASTStatementJSONSerializer.AST_STMT_NODE);			
-			ASTNode node = ASTNodeSerdes.deserializeNode(stmtNode);
+			ASTNode node = ASTNodeSerdes.deserializeNode(nodeDeserializer, stmtNode);
 			
 			if(!(node instanceof ASTStatement)) {
 				throw new ASTNodeSerdesException("Failed to deserialize statement - node returned");
@@ -102,7 +102,7 @@ public class ASTStatementJSONDeserializer implements ASTStatementDeserializer {
 	private Node deserializeNode(JSONObject stmtNode) throws JSONException {
 		if(stmtNode.has(ASTStatementJSONSerializer.AST_STMT_STATE)) {
 			String state = stmtNode.getString(ASTStatementJSONSerializer.AST_STMT_STATE);
-			Object node = stmtNode.get(ASTStatementJSONSerializer.AST_STMT_NODE);
+			Object node = stmtNode.opt(ASTStatementJSONSerializer.AST_STMT_NODE);
 			
 			return new SpecialState(node, state);
 		}

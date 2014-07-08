@@ -48,8 +48,8 @@ public class FunctionCall extends ASTNode {
 			ASTNodeSerdesPlan plan = ASTNodeSerdes.newPlan(Argument.class);
 			plan.addNodeParam(0, "argument", false);
 			plan.addBooleanParam(1, "byReference", false);
-			plan.addIntegerParam(2, "offset", false);
-			plan.addStringParam(2, "key", false);
+			plan.addIntegerParam(2, "offset", true);
+			plan.addStringParam(2, "key", true);
 		}
 	}
 	
@@ -135,6 +135,6 @@ public class FunctionCall extends ASTNode {
 	static {
 		ASTNodeSerdesPlan plan = ASTNodeSerdes.newPlan(FunctionCall.class);
 		plan.addStringParam(0, "function", false);
-		plan.addNodeListParam(0, "arguments", false);
+		plan.addNodeListParam(1, "arguments", false);
 	}
 }

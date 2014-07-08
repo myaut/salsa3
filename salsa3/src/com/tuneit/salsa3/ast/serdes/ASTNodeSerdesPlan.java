@@ -5,9 +5,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.List;
 import java.util.ArrayList;
-
-import org.json.JSONObject;
-import org.json.JSONException;
+import java.util.Iterator;
 
 import com.tuneit.salsa3.ast.ASTNode;
 
@@ -46,7 +44,7 @@ public class ASTNodeSerdesPlan {
 			return o;
 		}
 		
-		public Object deserialize(Object o) {
+		public Object deserialize(ASTNodeDeserializer deserializer, Object o) throws ASTNodeSerdesException {
 			return o;
 		} 
 	}
@@ -82,10 +80,7 @@ public class ASTNodeSerdesPlan {
 			return o.toString();
 		}
 		
-		public Object deserialize(Object o) {
-			/* TODO: Implement this */
-			// return o;
-			
+		public Object deserialize(ASTNodeDeserializer deserializer, Object o) {
 			return Enum.valueOf(enumClass, (String) o);
 		}
 	}
@@ -100,9 +95,8 @@ public class ASTNodeSerdesPlan {
 			return ASTNodeSerdes.serializeNode(serializer, o);
 		}
 		
-		public Object deserialize(Object o) {
-			/* TODO: Implement this */
-			return o;
+		public Object deserialize(ASTNodeDeserializer deserializer, Object o) throws ASTNodeSerdesException {
+			return ASTNodeSerdes.deserializeNode(deserializer, o);
 		}
 	}
 	
@@ -123,9 +117,18 @@ public class ASTNodeSerdesPlan {
 			return list;
 		}
 		
-		public Object deserialize(Object o) {
-			/* TODO: Implement this */
-			return o;
+		public Object deserialize(ASTNodeDeserializer deserializer, Object o) throws ASTNodeSerdesException {
+			List<ASTNode> nodeList = new ArrayList<ASTNode>();
+			Iterator<?> iterator = deserializer.getListIterator(o); 
+			
+			while(iterator.hasNext()) {
+				Object node = iterator.next();
+				ASTNode astNode = ASTNodeSerdes.deserializeNode(deserializer, node);
+				
+				nodeList.add(astNode);
+			}
+			
+			return nodeList;
 		}
 	}
 	
@@ -146,9 +149,17 @@ public class ASTNodeSerdesPlan {
 			return list;
 		}
 		
-		public Object deserialize(Object o) {
-			/* TODO: Implement this */
-			return o;
+		public Object deserialize(ASTNodeDeserializer deserializer, Object o) throws ASTNodeSerdesException  {
+			List<String> stringList = new ArrayList<String>();
+			Iterator<?> iterator = deserializer.getListIterator(o); 
+			
+			while(iterator.hasNext()) {
+				String string = (String) iterator.next();
+				
+				stringList.add(string);
+			}
+			
+			return stringList;
 		}
 	}
 	
@@ -225,73 +236,98 @@ public class ASTNodeSerdesPlan {
 				
 				serializer.addToNode(serializedNode, param.name, param.serialize(serializer, o));
 			} catch (NoSuchMethodException e) {
-				throw new ASTNodeSerdesException("Getter is missing", e);
+				throw new ASTNodeSerdesException("Getter " + getterName + " is missing", e);
 			} catch (SecurityException e) {
-				throw new ASTNodeSerdesException("Security exception", e);
+				throw new ASTNodeSerdesException("Security exception for getter" + getterName, e);
 			} catch (IllegalAccessException e) {
-				throw new ASTNodeSerdesException("Getter has invalid rights!", e);
+				throw new ASTNodeSerdesException("Getter " + getterName + "has invalid rights!", e);
 			} catch (IllegalArgumentException e) {
-				throw new ASTNodeSerdesException("Getter got invalid argument", e);
+				throw new ASTNodeSerdesException("Getter " + getterName + "got invalid argument", e);
 			} catch (InvocationTargetException e) {
-				throw new ASTNodeSerdesException("Invokation target error", e);
+				throw new ASTNodeSerdesException("Getter " + getterName + "invokation error", e);
+			} catch (ClassCastException e) {
+				throw new ASTNodeSerdesException("Unexpected class of parameter", e);
 			}
 		}
 		
 		return serializedNode;
 	}
 	
-	public ASTNode deserializeNode(JSONObject jso) throws ASTNodeSerdesException, JSONException {
+	public ASTNode deserializeNode(ASTNodeDeserializer deserializer, Object o) throws ASTNodeSerdesException {
 		List<Object> paramValues = new ArrayList<Object>();
 		List<Class<?>> paramClasses = new ArrayList<Class<?>>();
 		
 		int index = -1;
 		
 		for(Param param : params) {
-			Object value = jso.opt(param.name);
+			Object value = deserializer.getNodeParam(o, param.name);
 			
 			if(value == null) {
 				if(!param.optional) {
-					throw new ASTNodeSerdesException("Required parameter " + param.name + " is missing!");
+					throw new ASTNodeSerdesException("Required parameter '" + param.name + 
+											"' is missing  for class " + nodeClass.getName());
 				}
 				
 				continue;
 			}
 			
+			// System.out.println(param.name + " " + index + " " + param.index);
+			
 			if(index == param.index) {
-				throw new ASTNodeSerdesException("Duplicate parameter " + param.name + 
-									" at position " + Integer.toString(index) + "!");
+				throw new ASTNodeSerdesException("Duplicate parameter '" + param.name + 
+									"' at position " + Integer.toString(index) + 
+									" for class " + nodeClass.getName());
 			}
 			
 			index = param.index;			
-			value = param.deserialize(value);
+			value = param.deserialize(deserializer, value);
 			
 			paramValues.add(value);
 			paramClasses.add(value.getClass());
 		}
 		
 		try {
+			/* pure toArray() breaks type hints (?) and causes compilation error,
+			 * so convert list to array _manually_ */
 			Class<?>[] paramClassesArray = new Class<?>[paramClasses.size()]; 
 			int i = 0;
 			
-			for(Object paramClass : paramClasses.toArray()) {
-				paramClassesArray[i] = (Class<?>) paramClass;				
+			for(Object paramClassObject : paramClasses.toArray()) {
+				Class<?> paramClass = (Class<?>) paramClassObject;
+				
+				if(List.class.isAssignableFrom(paramClass)) {
+					/* While ASTNodes use ArrayList<?> for lists, they declare getters/constructors
+					 * with interfaced List<?>. getDeclaredConstructor() doesn't recognize that,
+					 * so give him a clue. */
+					paramClassesArray[i] = List.class;
+				}
+				else if(ASTNode.class.isAssignableFrom(paramClass)) {
+					/* Same as ArrayList<?>, downgrade to most common class */
+					paramClassesArray[i] = ASTNode.class;
+				}
+				else {
+					paramClassesArray[i] = paramClass;
+				}
+				
 				++i;
 			}
 			
 			Constructor<?> ctor = nodeClass.getDeclaredConstructor(paramClassesArray);
 			return (ASTNode) ctor.newInstance(paramValues.toArray());
 		} catch (NoSuchMethodException e) {
-			throw new ASTNodeSerdesException("Getter is missing", e);
+			throw new ASTNodeSerdesException("Constructor is missing for class " + nodeClass.getName(), e);
 		} catch (SecurityException e) {
-			throw new ASTNodeSerdesException("Security exception", e);
+			throw new ASTNodeSerdesException("Security exception for class " + nodeClass.getName(), e);
 		} catch (IllegalAccessException e) {
-			throw new ASTNodeSerdesException("Getter has invalid rights!", e);
+			throw new ASTNodeSerdesException("Constructor has invalid rights for class " + nodeClass.getName(), e);
 		} catch (IllegalArgumentException e) {
-			throw new ASTNodeSerdesException("Getter got invalid argument", e);
+			throw new ASTNodeSerdesException("Constructor got invalid argument for class " + nodeClass.getName(), e);
 		} catch (InvocationTargetException e) {
-			throw new ASTNodeSerdesException("Invokation target error", e);
+			throw new ASTNodeSerdesException("Constructor invokation target error for class " + nodeClass.getName(), e);
 		} catch (InstantiationException e) {
-			throw new ASTNodeSerdesException("Instantiation exception", e);
+			throw new ASTNodeSerdesException("Instantiation exception for class " + nodeClass.getName(), e);
+		} catch (ClassCastException e) {
+			throw new ASTNodeSerdesException("Unexpected class of parameter", e);
 		}
 		
 	}

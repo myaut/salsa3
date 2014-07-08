@@ -40,7 +40,7 @@ public interface ASTStatementDeserializer {
 		public abstract boolean isLastStatement();
 	}
 	
-	public ASTStatement getStatementNode(Object o) throws ASTNodeSerdesException;
+	public ASTStatement getStatementNode(ASTNodeDeserializer nodeDeserializer, Object o) throws ASTNodeSerdesException;
 	
 	public StatementIterator getFirstStatement(Object o) throws ASTNodeSerdesException;
 	public StatementIterator getNextStatement(Object o, StatementIterator iterator) throws ASTNodeSerdesException;	

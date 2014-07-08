@@ -37,20 +37,11 @@ public class ASTNodeSerdes {
 		return plan.serializeNode(serializer, o);
 	}
 	
-	public static ASTNode deserializeNode(Object o) throws ASTNodeSerdesException {
-		/* FIXME: Universal deserializer */
-		JSONObject jso = (JSONObject) o;
+	public static ASTNode deserializeNode(ASTNodeDeserializer deserializer, Object o) throws ASTNodeSerdesException {
+		String className = deserializer.getNodeClassName(o);
+		ASTNodeSerdesPlan plan = planHashMap.get(className);
 		
-		try {
-			String className = jso.getString(ASTNodeJSONSerializer.ASTTYPE_NAME);
-			ASTNodeSerdesPlan plan = planHashMap.get(className);
-			
-			jso.put(ASTNodeJSONSerializer.ASTTYPE_NAME, (Object) null);
-			
-			return plan.deserializeNode(jso);
-		} catch (JSONException e) {
-			throw new ASTNodeSerdesException("JSON error!", e);
-		}
+		return plan.deserializeNode(deserializer, o);
 	}
 	
 	public static void main(String[] args) throws ASTNodeSerdesException, JSONException
@@ -64,7 +55,7 @@ public class ASTNodeSerdes {
 		for(BreakStatement stmt : statements) {
 			JSONObject jso = (JSONObject) serializeNode(new ASTNodeJSONSerializer(), stmt);
 			System.out.println(jso.toString());
-			BreakStatement stmt2 = (BreakStatement) deserializeNode(jso);
+			BreakStatement stmt2 = (BreakStatement) deserializeNode(new ASTNodeJSONDeserializer(), jso);
 			
 			System.out.println(stmt2.toString());
 		}
