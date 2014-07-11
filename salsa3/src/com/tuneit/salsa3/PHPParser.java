@@ -1,11 +1,18 @@
 package com.tuneit.salsa3;
 
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Image;
+import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.ProcessBuilder.Redirect;
 import java.util.HashMap;
+
+import javax.imageio.ImageIO;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -19,6 +26,8 @@ import com.tuneit.salsa3.ast.serdes.ASTStatementJSONDeserializer;
 import com.tuneit.salsa3.ast.serdes.ASTStatementJSONSerializer;
 import com.tuneit.salsa3.ast.serdes.ASTStatementSerdes;
 import com.tuneit.salsa3.ast.serdes.ASTStatementSerializer;
+import com.tuneit.salsa3.ast.visual.ASTStatementVisualizer;
+import com.tuneit.salsa3.ast.visual.VisualNode;
 import com.tuneit.salsa3.php.*;
 
 public final class PHPParser {
@@ -105,19 +114,9 @@ public final class PHPParser {
 				throw new ParserException("Parser error: return code = " + exitValue);
 			}
 			
-			ASTStatementSerializer serializer = new ASTStatementJSONSerializer();
+			
 			ASTStatement root = (ASTStatement) handler.getRootNode();
-			
-			JSONObject jso = (JSONObject) root.serializeStatement(serializer);
-			
-			// System.out.println(jso.toString(4));
-			
-			ASTStatement newRoot = ASTStatementSerdes.deserializeStatement(new ASTNodeJSONDeserializer(), 
-					new ASTStatementJSONDeserializer(), jso);
-			
-			JSONObject newJso = (JSONObject) newRoot.serializeStatement(serializer);
-			
-			System.out.println(newJso.toString(4));
+			visualizeStatement(root);			
 		}
 		catch(InterruptedException ie) {
 			ParserException pe = new ParserException("Parser process was interrupted", ie);
@@ -131,6 +130,25 @@ public final class PHPParser {
 			ParserException pe = new ParserException("JSON error: " + line, je);
 			throw pe;
 		}
+	}
+	
+	public void visualizeStatement(ASTStatement root) throws ASTNodeSerdesException, IOException {		
+		ASTStatementVisualizer visualizer = new ASTStatementVisualizer();
+		VisualNode vn = (VisualNode) root.serializeStatement(visualizer);
+		
+		Image tmpImage = new BufferedImage(10, 10, BufferedImage.TYPE_INT_RGB);
+		vn.setBaseXY(tmpImage.getGraphics(), 0, 0);
+		
+		BufferedImage image = new BufferedImage(vn.getExtendedWidth(), vn.getExtendedHeight(), 
+												BufferedImage.TYPE_INT_RGB);
+		Graphics g = image.getGraphics(); 
+		g.setColor(Color.WHITE);
+		g.fillRect(0, 0, vn.getExtendedWidth(), vn.getExtendedHeight());
+		g.setColor(Color.BLACK);
+		vn.render(image.getGraphics());
+		
+		File outputfile = new File("ast.png");
+		ImageIO.write(image, "png", outputfile);
 	}
 	
 	public static void main(String[] args) throws ASTNodeSerdesException {

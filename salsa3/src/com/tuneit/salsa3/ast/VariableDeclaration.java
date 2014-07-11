@@ -66,7 +66,7 @@ public class VariableDeclaration extends ASTNode {
 	/* Serialization code */
 	static {
 		ASTNodeSerdesPlan plan = ASTNodeSerdes.newPlan(VariableDeclaration.class);
-		plan.addStringParam(0, "variable", false);
+		plan.addNodeParam(0, "variable", false);
 		plan.addNodeParam(1, "typeName", false);
 		plan.addNodeParam(2, "defaultValue", true);
 	}
