@@ -33,7 +33,7 @@ public class IncludeStatement extends ASTNode {
 	
 	/* Serialization code */
 	static {
-		ASTNodeSerdesPlan plan = ASTNodeSerdes.newPlan(Variable.class);
+		ASTNodeSerdesPlan plan = ASTNodeSerdes.newPlan(IncludeStatement.class);
 		plan.addNodeParam(0, "includePath", false);
 		plan.addBooleanParam(1, "isOnce", false);
 	}

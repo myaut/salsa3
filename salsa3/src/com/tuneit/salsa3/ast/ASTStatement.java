@@ -57,7 +57,7 @@ public class ASTStatement extends ASTNode {
 	
 	public void deserializeState(String state, ASTNode node) throws ASTNodeSerdesException {
 		throw new ASTNodeSerdesException("Couldn't deserialize state '" + state + 
-							"' for statement" + this.getClass().getName() + "!");
+							"' for statement " + this.getClass().getName() + "!");
 	}
 	
 	@Override

@@ -44,7 +44,7 @@ public final class PHPParser {
 		this.zNode2AST = new ZNode2AST();
 	}
 	
-	public void parse() throws ParserException, ASTNodeSerdesException {
+	public ASTStatement parse() throws ParserException, ASTNodeSerdesException {
 		ProcessBuilder processBuilder = new ProcessBuilder(PHPParser.phpParserBinary, this.filePath);		
 		processBuilder.redirectOutput(Redirect.PIPE);
 		processBuilder.redirectError(Redirect.INHERIT);
@@ -113,10 +113,11 @@ public final class PHPParser {
 			if(exitValue != 0) {
 				throw new ParserException("Parser error: return code = " + exitValue);
 			}
-			
-			
+						
 			ASTStatement root = (ASTStatement) handler.getRootNode();
-			visualizeStatement(root);			
+			root.filterReused();
+			
+			return root;	
 		}
 		catch(InterruptedException ie) {
 			ParserException pe = new ParserException("Parser process was interrupted", ie);
@@ -132,7 +133,7 @@ public final class PHPParser {
 		}
 	}
 	
-	public void visualizeStatement(ASTStatement root) throws ASTNodeSerdesException, IOException {		
+	public static void visualizeStatement(ASTStatement root) throws ASTNodeSerdesException, IOException {		
 		ASTStatementVisualizer visualizer = new ASTStatementVisualizer();
 		VisualNode vn = (VisualNode) root.serializeStatement(visualizer);
 		
@@ -151,14 +152,26 @@ public final class PHPParser {
 		ImageIO.write(image, "png", outputfile);
 	}
 	
-	public static void main(String[] args) throws ASTNodeSerdesException {
+	public static ASTStatement serdesStatement(ASTStatement root) throws ASTNodeSerdesException {
+		ASTStatementSerializer serializer = new ASTStatementJSONSerializer();
+
+		JSONObject jso = (JSONObject) root.serializeStatement(serializer);
+
+		ASTStatement newRoot = ASTStatementSerdes.deserializeStatement(new ASTNodeJSONDeserializer(),
+												new ASTStatementJSONDeserializer(), jso);
+
+		return newRoot;		
+	}
+	
+	public static void main(String[] args) {
 		PHPParser parser = new PHPParser(args[0]);
 		
 		try {
-			parser.parse();
+			ASTStatement root = parser.parse();			
+			visualizeStatement(serdesStatement(root));
 		}
-		catch(ParserException pe) {
-			pe.printStackTrace();
+		catch(Exception e) {
+			e.printStackTrace();
 		}
 	}
 }

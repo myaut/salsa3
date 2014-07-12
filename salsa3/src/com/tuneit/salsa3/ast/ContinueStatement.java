@@ -1,5 +1,8 @@
 package com.tuneit.salsa3.ast;
 
+import com.tuneit.salsa3.ast.serdes.ASTNodeSerdes;
+import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesPlan;
+
 public class ContinueStatement extends ASTNode {
 	private String label;
 	private int continueNesting;
@@ -23,7 +26,7 @@ public class ContinueStatement extends ASTNode {
 		return this.label;
 	}
 	
-	public int getNesting() {
+	public int getContinueNesting() {
 		return this.continueNesting;
 	}
 	
@@ -35,5 +38,12 @@ public class ContinueStatement extends ASTNode {
 		}
 		
 		return "Continue [n=" + this.continueNesting + "]";
+	}
+	
+	/* Serialization code */
+	static {
+		ASTNodeSerdesPlan plan = ASTNodeSerdes.newPlan(ContinueStatement.class);
+		plan.addIntegerParam(0, "continueNesting", true).setDefaultValue(1);
+		plan.addStringParam(0, "label", true);
 	}
 }

@@ -231,7 +231,7 @@ public class VisualNode {
 			
 			rightNode.setBaseXY(graphics, baseNodeX, baseY);
 			
-			tmpW = baseNodeX - x + XMARGIN + rightNode.getExtendedWidth();			
+			tmpW = baseNodeX - x + INDENT + XMARGIN + rightNode.getExtendedWidth();			
 			if(tmpW > extendedWidth) {		
 				extendedWidth = tmpW;
 			}

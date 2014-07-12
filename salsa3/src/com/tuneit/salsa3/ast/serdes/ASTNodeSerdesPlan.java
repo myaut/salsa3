@@ -227,7 +227,12 @@ public class ASTNodeSerdesPlan {
 			String getterName = param.getGetterName();
 			Method getter;
 			try {
-				getter = nodeClass.getDeclaredMethod(getterName);
+				try {
+					getter = nodeClass.getDeclaredMethod(getterName);
+				}
+				catch(NoSuchMethodException e) {
+					getter = nodeClass.getSuperclass().getDeclaredMethod(getterName);
+				}
 				Object o = getter.invoke(node);
 				
 				if(param.isOptionalAndDefault(o)) {
@@ -236,17 +241,23 @@ public class ASTNodeSerdesPlan {
 				
 				serializer.addToNode(serializedNode, param.name, param.serialize(serializer, o));
 			} catch (NoSuchMethodException e) {
-				throw new ASTNodeSerdesException("Getter " + getterName + " is missing", e);
+				throw new ASTNodeSerdesException("Getter " + getterName + 
+								" is missing in class" + nodeClass.getName(), e);
 			} catch (SecurityException e) {
-				throw new ASTNodeSerdesException("Security exception for getter" + getterName, e);
+				throw new ASTNodeSerdesException("Security exception for getter" + getterName + 
+								" from class" + nodeClass.getName(), e);
 			} catch (IllegalAccessException e) {
-				throw new ASTNodeSerdesException("Getter " + getterName + "has invalid rights!", e);
+				throw new ASTNodeSerdesException("Getter " + getterName + 
+								"has invalid rights in class" + nodeClass.getName(), e);
 			} catch (IllegalArgumentException e) {
-				throw new ASTNodeSerdesException("Getter " + getterName + "got invalid argument", e);
+				throw new ASTNodeSerdesException("Getter " + getterName + 
+								"got invalid argument in class" + nodeClass.getName(), e);
 			} catch (InvocationTargetException e) {
-				throw new ASTNodeSerdesException("Getter " + getterName + "invokation error", e);
+				throw new ASTNodeSerdesException("Getter " + getterName + 
+								"invokation error in class" + nodeClass.getName(), e);
 			} catch (ClassCastException e) {
-				throw new ASTNodeSerdesException("Unexpected class of parameter", e);
+				throw new ASTNodeSerdesException("Unexpected class of parameter for class" + 
+								nodeClass.getName(), e);
 			}
 		}
 		

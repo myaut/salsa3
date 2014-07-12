@@ -7,7 +7,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
+import com.tuneit.salsa3.ast.serdes.ASTNodeSerdes;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesException;
+import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesPlan;
 import com.tuneit.salsa3.ast.serdes.ASTStatementSerializer;
 
 public class SwitchStatement extends ASTStatement {
@@ -36,7 +38,7 @@ public class SwitchStatement extends ASTStatement {
 		cases.add(kase);
 	}
 
-	public ASTNode getExpr() {
+	public ASTNode getExpression() {
 		return expr;
 	}
 
@@ -86,4 +88,22 @@ public class SwitchStatement extends ASTStatement {
 		return switchStatement;
 	}
 	
+	@Override
+	public void deserializeState(String state, ASTNode node) throws ASTNodeSerdesException {
+		if(state.equals("default")) {
+			addCase(null);
+		}
+		else if(state.equals("case")) {
+			addCase(node);
+		}
+		else {
+			super.deserializeState(state, node);
+		}
+	}
+	
+	/* Serialization code */
+	static {
+		ASTNodeSerdesPlan plan = ASTNodeSerdes.newPlan(SwitchStatement.class);
+		plan.addNodeParam(0, "expression", false);
+	}
 }

@@ -1,5 +1,8 @@
 package com.tuneit.salsa3.ast;
 
+import com.tuneit.salsa3.ast.serdes.ASTNodeSerdes;
+import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesPlan;
+
 public class WhileStatement extends ASTStatement {
 	private ASTNode condition;
 	
@@ -14,5 +17,10 @@ public class WhileStatement extends ASTStatement {
 	@Override
 	public String toString() {
 		return "While [" + condition + "]";
+	}
+	
+	static {
+		ASTNodeSerdesPlan plan = ASTNodeSerdes.newPlan(WhileStatement.class);
+		plan.addNodeParam(0, "condition", false);
 	}
 }

@@ -3,11 +3,18 @@ package com.tuneit.salsa3.ast;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.tuneit.salsa3.ast.serdes.ASTNodeSerdes;
+import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesPlan;
+
 public class NamespaceName extends ASTNode {
 	private List<String> components;
 	
 	public NamespaceName() {
-		components = new ArrayList<String>();
+		this.components = new ArrayList<String>();
+	}
+	
+	public NamespaceName(List<String> components) {
+		this.components = components;
 	}
 	
 	public void addComponent(String component) {
@@ -33,4 +40,10 @@ public class NamespaceName extends ASTNode {
 		
 		return sb.toString();
 	}
+	
+	/* Serialization code */
+	static {
+		ASTNodeSerdesPlan plan = ASTNodeSerdes.newPlan(NamespaceName.class);
+		plan.addStringListParam(0, "components", false);
+	}	
 }

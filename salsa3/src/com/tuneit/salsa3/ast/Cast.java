@@ -1,20 +1,23 @@
 package com.tuneit.salsa3.ast;
 
+import com.tuneit.salsa3.ast.serdes.ASTNodeSerdes;
+import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesPlan;
+
 public class Cast extends ASTNode {
 	private TypeName type;
 	private ASTNode expression;
 	private String castType;
 	
-	public Cast(TypeName type, ASTNode expression) {
+	public Cast(ASTNode type, ASTNode expression) {
 		super();
-		this.type = type;
+		this.type = (TypeName) type;
 		this.expression = expression;
 		this.castType = null;
 	}
 	
-	public Cast(TypeName type, ASTNode expression, String castType) {
+	public Cast(ASTNode type, ASTNode expression, String castType) {
 		super();
-		this.type = type;
+		this.type = (TypeName) type;
 		this.expression = expression;
 		this.castType = castType;
 	}
@@ -41,4 +44,11 @@ public class Cast extends ASTNode {
 				+ ", castType=" + castType + "]";
 	}
 	
+	/* Serialization code */
+	static {
+		ASTNodeSerdesPlan plan = ASTNodeSerdes.newPlan(Cast.class);
+		plan.addNodeParam(0, "type", false);
+		plan.addNodeParam(1, "expression", false);
+		plan.addStringParam(2, "castType", true);
+	}
 }

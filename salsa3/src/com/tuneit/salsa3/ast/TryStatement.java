@@ -5,11 +5,13 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.tuneit.salsa3.ast.serdes.ASTNodeSerdes;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesException;
+import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesPlan;
 import com.tuneit.salsa3.ast.serdes.ASTStatementSerializer;
 
 public class TryStatement extends ASTStatement {
-	public static class CatchStatement extends ASTStatement {
+	private static class CatchStatement extends ASTStatement {
 		public VariableDeclaration varDecl;
 		
 		public CatchStatement(VariableDeclaration varDecl) {
@@ -20,20 +22,35 @@ public class TryStatement extends ASTStatement {
 	
 	private List<CatchStatement> catches;
 	private ASTStatement finallyStatement;
+	private ASTStatement currentStatement;
 	
 	public TryStatement() {
 		super();
 		
 		catches = new ArrayList<CatchStatement>();
 		finallyStatement = null;
+		currentStatement = this;
 	}
 	
-	public void addCatchStatement(CatchStatement katch) {
+	public void addCatchStatement(VariableDeclaration varDecl) {
+		CatchStatement katch = new CatchStatement(varDecl);
+		currentStatement = katch;
+		
 		this.catches.add(katch);
 	}
 	
 	public void setFinallyStatement(ASTStatement finallyStatement) {
-		this.finallyStatement = finallyStatement;
+		this.currentStatement = this.finallyStatement = finallyStatement;
+	}
+	
+	@Override
+	public void addChild(ASTNode child) {
+		if(currentStatement == this) {
+			super.addChild(child);
+			return;
+		}
+		
+		this.currentStatement.addChild(child);
 	}
 	
 	@Override 
@@ -44,7 +61,7 @@ public class TryStatement extends ASTStatement {
 		serializeStatementChildren(serializer, tryStatement);
 		
 		for(CatchStatement katch : catches) {
-			serializer.addSpecialNode(tryStatement, "try", katch.varDecl);
+			serializer.addSpecialNode(tryStatement, "catch", katch.varDecl);
 			katch.serializeStatementChildren(serializer, tryStatement);
 		}
 	
@@ -57,7 +74,28 @@ public class TryStatement extends ASTStatement {
 	}
 	
 	@Override
+	public void deserializeState(String state, ASTNode node) throws ASTNodeSerdesException {
+		if(state.equals("try")) {
+			currentStatement = this;
+		}
+		else if(state.equals("catch")) {
+			addCatchStatement((VariableDeclaration) node);
+		}
+		else if(state.equals("finally")) {
+			setFinallyStatement(new ASTStatement());
+		}
+		else {
+			super.deserializeState(state, node);
+		}
+	}
+	
+	@Override
 	public String toString() {
 		return "TryStatement";
+	}
+	
+	/* Serialization code */
+	static {
+		ASTNodeSerdesPlan plan = ASTNodeSerdes.newPlan(TryStatement.class);
 	}
 }

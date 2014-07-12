@@ -42,20 +42,15 @@ public class PHPTryHandler extends PHPStatementHandler implements
 			
 			VariableDeclaration varDecl = new VariableDeclaration(variable, new TypeName(classNameNode.getToken()));
 			
-			TryStatement.CatchStatement catchStatement = new TryStatement.CatchStatement(varDecl);
-			
-			setRootNode(catchStatement);			
-			tryStatement.addCatchStatement(catchStatement);
+			tryStatement.addCatchStatement(varDecl);
 			
 			return this;
 		}
 		else if(state.isState("end_catch")) {	
-			setRootNode(null);
 			return this;
 		}
 		else if(state.isState("mark_last_catch")) {
 			/* Set root node back to tryStatement */
-			setRootNode(this.tryStatement);
 			return parent;
 		}
 		
