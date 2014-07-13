@@ -22,6 +22,16 @@ public class PHPRootHandler extends PHPStatementHandler implements PHPParserHand
 			
 			return newHandler;
 		}
+		else if(state.isState("begin_class_declaration")) {
+			PHPClassHandler phpClassDecl = new PHPClassHandler(this);
+			PHPParserHandler newHandler = phpClassDecl.handleState(state);
+			
+			ASTNode classDecl = newHandler.getRootNode();
+			
+			((ASTStatement) getRootNode()).addChild(classDecl);
+			
+			return newHandler;
+		}
 		
 		return super.handleState(state);
 	}

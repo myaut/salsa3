@@ -115,6 +115,7 @@ public class VisualNode {
 	}
 	
 	public void addParam(String key, String value) {
+		this.isFakeNode = false;
 		params.add(new VisualString(VisualString.Style.STYLE_NORMAL, key + PARAM_DELIMITER + value));
 	}
 	
@@ -187,12 +188,14 @@ public class VisualNode {
 		this.x = baseX; this.y = baseY;
 		
 		baseX += PADDING; baseY += PADDING;
-		name.setBaseXY(graphics, baseX, baseY);
 		
-		/* Calculate width and height */		
-		width = name.width;
-		baseY += name.height;
+		if(!name.string.isEmpty()) {
+			name.setBaseXY(graphics, baseX, baseY);			
+			width = name.width;
+			baseY += name.height;
+		}		
 		
+		/* Calculate width and height */	
 		for(VisualString param : params) {			
 			param.setBaseXY(graphics, baseX, baseY);
 			

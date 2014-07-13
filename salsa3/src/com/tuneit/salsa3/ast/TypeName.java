@@ -54,6 +54,6 @@ public class TypeName extends ASTNode {
 	static {
 		ASTNodeSerdesPlan plan = ASTNodeSerdes.newPlan(TypeName.class);
 		plan.addStringParam(0, "typeName", false);
-		plan.addStringParam(1, "typeQualifiers", false);
+		plan.addStringListParam(1, "typeQualifiers", false);
 	}	
 }

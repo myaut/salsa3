@@ -103,10 +103,11 @@ public final class PHPParser {
 				handler = handler.handleState(state);
 				
 				if(!state.isMatched()) {
-					System.err.println("State " + state.state + " wasn't matched! ");
+					System.err.println("State " + state.state + 
+								" at line " + state.lineNo + " wasn't matched! ");
 				}
 				
-				// System.out.println(handler + " " + state.state); 
+				// System.out.println(handler + " " + state.state + "@" + state.lineNo); 
 			}
 			
 			int exitValue = process.waitFor();

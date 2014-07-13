@@ -9,6 +9,7 @@
 #define ZEND_API_H_
 
 #include <zend.h>
+#include <zend_stack.h>
 
 /* This file is a stub for zend_language_parser */
 
@@ -31,6 +32,8 @@ typedef struct _zend_compiler_globals {
 	int doc_comment_len;
 
 	unsigned long zend_nodeid;
+
+	zend_stack object_stack;
 } zend_compiler_globals;
 
 extern zend_compiler_globals cg;

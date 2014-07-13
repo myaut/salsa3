@@ -88,6 +88,9 @@ public class PHPStatementHandler implements PHPParserHandler {
 		else if(state.isState("throw")) {
 			return this.handleThrow(state);
 		}
+		else if(state.isState("return")) {
+			return this.handleReturn(state);
+		}
 		else if(state.isState("end_finally")) {
 			/* Finally was not started, spurious state - ignore */
 		}
@@ -347,6 +350,14 @@ public class PHPStatementHandler implements PHPParserHandler {
 		varDecl.addTypeQualifier("static");
 		
 		rootNode.addChild(varDecl);
+		
+		return this;
+	}
+	
+	private PHPParserHandler handleReturn(PHPParserState state) throws ParserException {
+		ASTNode returnExpression = state.getNodeOptional("expr");
+		
+		rootNode.addChild(new ReturnStatement(returnExpression));
 		
 		return this;
 	}

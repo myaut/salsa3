@@ -71,7 +71,10 @@ public class PHPExpressionHelper {
 		else if(state.isState("unary_op")) {
 			return PHPExpressionHelper.handleUnaryOperation(state, handler);
 		}
-		else if(state.isState("begin_function_call") || state.isState("begin_class_member_function_call")) {
+		else if(state.isState("begin_function_call") || 
+				state.isState("begin_class_member_function_call") || 
+				state.isState("begin_method_call") ||
+				state.isState("begin_new_object")) {
 			return PHPExpressionHelper.handleFunctionCall(state, handler);
 		}
 		else if(state.isState("array_dim")) {
@@ -100,14 +103,26 @@ public class PHPExpressionHelper {
 		}
 		else if(state.isState("cast")) {
 			return PHPExpressionHelper.handleCast(state, handler);
-		}		
+		}
+		else if(state.isState("fetch_class")) {
+			return PHPExpressionHelper.handleFetchClass(state, handler);
+		}
+		else if(state.isState("pop_object")) {
+			return PHPExpressionHelper.handlePopObject(state, handler);
+		}
+		else if(state.isState("fetch_property")) {
+			return PHPExpressionHelper.handleFetchProperty(state, handler);
+		}
+		else if(state.isState("instanceof")) {
+			return PHPExpressionHelper.handleInstanceOf(state, handler);
+		}
 		else if(state.isGenericState()) {
 			return handler;
 		}
 		
 		return handler;
 	}
-	
+
 	private static PHPParserHandler handlePrint(PHPParserState state, PHPParserHandler handler) throws ParserException {
 		ASTNode result = state.getNode("result");
 		ASTNode arg = state.getNode("arg");
@@ -318,6 +333,56 @@ public class PHPExpressionHelper {
 		Cast cast = new Cast(new TypeName(typeName), expr);
 		
 		result.setNode(cast);
+		
+		return handler;
+	}
+	
+	private static PHPParserHandler handleFetchClass(PHPParserState state, PHPParserHandler handler) throws ParserException {
+		ASTNode result = state.getNode("result");
+		ASTNode className = state.getNode("class_name");
+		
+		result.setNode(className);
+		
+		return handler;
+	}
+	
+	private static PHPParserHandler handlePopObject(PHPParserState state, PHPParserHandler handler) throws ParserException {
+		ASTNode object = state.getNode("object");
+		
+		if(object instanceof Variable) {
+			Variable variable = (Variable) object;
+			
+			if(variable.getVarName().equals("this")) {
+				VariableThis varThis = new VariableThis();
+				variable.setNode(varThis);
+			}
+		}
+		
+		return handler;
+	}
+	
+	private static PHPParserHandler handleFetchProperty(PHPParserState state, PHPParserHandler handler) throws ParserException {
+		ASTNode result = state.getNode("result");
+		ASTNode object = state.getNode("object");
+		Literal property = (Literal) state.getNode("property");
+		
+		InstanceMember instanceMember = new InstanceMember(object, property.getToken());
+		
+		result.setNode(instanceMember);
+		
+		return handler;
+	}
+	
+	private static PHPParserHandler handleInstanceOf(PHPParserState state, PHPParserHandler handler)  throws ParserException {
+		ASTNode result = state.getNode("result");
+		ASTNode expression = state.getNode("expr");
+		Literal classNameNode = (Literal) state.getNode("class_znode");
+		
+		String className = classNameNode.getToken();
+		
+		InstanceOf instanceOf = new InstanceOf(className, expression);
+		
+		result.setNode(instanceOf);
 		
 		return handler;
 	}

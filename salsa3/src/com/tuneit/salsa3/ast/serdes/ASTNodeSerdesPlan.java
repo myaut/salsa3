@@ -163,6 +163,40 @@ public class ASTNodeSerdesPlan {
 		}
 	}
 	
+	public class EnumListParam<T extends Enum<T>> extends Param {
+		private Class<T> enumClass;
+		
+		public EnumListParam(int index, String name, boolean optional, Class<T> enumClass) {
+			super(index, name, optional);
+			
+			this.enumClass = enumClass;
+		}
+		
+		public Object serialize(ASTNodeSerializer serializer, Object o) throws ASTNodeSerdesException {
+			Object list = serializer.createList();
+			List<?> eList = (List<?>) o;
+			
+			for(Object e : eList) {
+				serializer.addToList(list, e.toString());
+			}
+			
+			return list;
+		}
+		
+		public Object deserialize(ASTNodeDeserializer deserializer, Object o) throws ASTNodeSerdesException {
+			List<Object> enumList = new ArrayList<Object>();
+			Iterator<?> iterator = deserializer.getListIterator(o); 
+			
+			while(iterator.hasNext()) {
+				String string = (String) iterator.next();
+				
+				enumList.add(Enum.valueOf(enumClass, string));
+			}
+			
+			return enumList;
+		}
+	}
+	
 	private Class<?> nodeClass;
 	private List<Param> params;
 	
@@ -215,6 +249,13 @@ public class ASTNodeSerdesPlan {
 	
 	public Param addNodeListParam(int index, String name, boolean optional) {
 		Param param = new NodeListParam(index, name, optional);
+		params.add(param);
+		
+		return param;
+	}
+	
+	public <T extends Enum<T>> Param addEnumListParam(int index, String name, boolean optional, Class<T> enumClass) {
+		Param param = new EnumListParam<T>(index, name, optional, enumClass);
 		params.add(param);
 		
 		return param;

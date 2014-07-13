@@ -87,7 +87,7 @@ static void _salsa3_dump_znode(const char* name, const znode* arg) {
 			if(zv->token != NULL)
 				printf(", \"value\": \"%s\"", zv->token);
 			else
-				printf(", \"value\": \"%l\"", Z_LVAL(*zv));
+				printf(", \"value\": \"%ld\"", Z_LVAL(*zv));
 			break;
 		case IS_DOUBLE:
 			if(zv->token != NULL)
@@ -113,6 +113,16 @@ static void _salsa3_dump_znode(const char* name, const znode* arg) {
 
 static void salsa3_end() {
 	fputs("}\n", stdout);
+}
+
+static void init_znode(znode* zendlval) {
+	zendlval->op_type = IS_CONST;
+	zendlval->nodeid = CG(zend_nodeid)++;
+	INIT_PZVAL(&zendlval->u.constant);
+
+	Z_TYPE(zendlval->u.constant) = IS_LONG;
+	zendlval->u.constant.token = NULL;
+	Z_LVAL(zendlval->u.constant) = 0;
 }
 
 #define salsa3_dump_int_param(param) _salsa3_dump_int_param(#param, param)
@@ -141,6 +151,8 @@ void zend_init_compiler_context(TSRMLS_D) /* {{{ */
 	cg.doc_comment_len = 0;
 
 	cg.zend_nodeid = 0;
+
+	zend_stack_init(&cg.object_stack);
 }
 /* }}} */
 
@@ -287,7 +299,7 @@ void zend_do_echo(const znode *arg TSRMLS_DC) /* {{{ */
 
 void zend_do_abstract_method(const znode *function_name, znode *modifiers, const znode *body TSRMLS_DC) /* {{{ */
 {
-	salsa3_begin("echo");
+	salsa3_begin("abstract_method");
 	salsa3_dump_znode(function_name);
 	salsa3_dump_znode(modifiers);
 	salsa3_dump_znode(body);
@@ -453,7 +465,9 @@ void zend_do_free(znode *op1 TSRMLS_DC) /* {{{ */
 
 int zend_do_verify_access_types(const znode *current_access_type, const znode *new_modifier) /* {{{ */
 {
-	salsa3_unimplimented();
+	/* Ignore dumping this node */
+
+	return (Z_LVAL(current_access_type->u.constant) | Z_LVAL(new_modifier->u.constant));;
 }
 /* }}} */
 
@@ -550,6 +564,7 @@ void zend_do_resolve_class_name(znode *result, znode *class_name, int is_static 
 void zend_do_fetch_class(znode *result, znode *class_name TSRMLS_DC) /* {{{ */
 {
 	salsa3_begin("fetch_class");
+	salsa3_dump_znode(result);
 	salsa3_dump_znode(class_name);
 	salsa3_end();
 }
@@ -925,8 +940,14 @@ void zend_do_default_before_statement(const znode *case_list, znode *default_tok
 
 void zend_do_begin_class_declaration(const znode *class_token, znode *class_name, const znode *parent_class_name TSRMLS_DC) /* {{{ */
 {
+	/* Small hack here: class_token uses extended attributes,
+	 * but it breaks ZNode2AST logic, so mimic that it is simple long ZVAL  */
+	znode class_token_val;
+	init_znode(&class_token_val);
+	Z_LVAL(class_token_val.u.constant) = class_token->EA;
+
 	salsa3_begin("begin_class_declaration");
-	salsa3_dump_znode(class_token);
+	salsa3_dump_znode(&class_token_val);
 	salsa3_dump_znode(class_name);
 	salsa3_dump_znode(parent_class_name);
 	salsa3_end();
@@ -943,7 +964,7 @@ void zend_do_end_class_declaration(const znode *class_token, const znode *parent
 
 void zend_do_implements_interface(znode *interface_name TSRMLS_DC) /* {{{ */
 {
-	salsa3_begin("begin_class_declaration");
+	salsa3_begin("implements");
 	salsa3_dump_znode(interface_name);
 	salsa3_end();
 }
@@ -951,7 +972,9 @@ void zend_do_implements_interface(znode *interface_name TSRMLS_DC) /* {{{ */
 
 void zend_do_use_trait(znode *trait_name TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("use_trait");
+	salsa3_dump_znode(trait_name);
+	salsa3_end();
 }
 /* }}} */
 
@@ -1004,17 +1027,23 @@ void zend_do_halt_compiler_register(TSRMLS_D) /* {{{ */
 
 void zend_do_push_object(const znode *object TSRMLS_DC) /* {{{ */
 {
-	salsa3_begin("push_object");
-	salsa3_dump_znode(object);
-	salsa3_end();
+	zend_stack_push(&CG(object_stack), object, sizeof(znode));
 }
 /* }}} */
 
 void zend_do_pop_object(znode *object TSRMLS_DC) /* {{{ */
 {
-	salsa3_begin("pop_object");
-	salsa3_dump_znode(object);
-	salsa3_end();
+	if (object) {
+		znode *tmp;
+
+		zend_stack_top(&CG(object_stack), (void **) &tmp);
+		*object = *tmp;
+
+		salsa3_begin("pop_object");
+		salsa3_dump_znode(object);
+		salsa3_end();
+	}
+	zend_stack_del_top(&CG(object_stack));
 }
 /* }}} */
 
@@ -1032,7 +1061,7 @@ void zend_do_end_new_object(znode *result, const znode *new_token, const znode *
 	salsa3_begin("end_new_object");
 	salsa3_dump_znode(result);
 	salsa3_dump_znode(new_token);
-	salsa3_dump_znode(argument_list);
+	// salsa3_dump_znode(argument_list);
 	salsa3_end();
 }
 /* }}} */
@@ -1196,7 +1225,12 @@ void zend_do_isset_or_isempty(int type, znode *result, znode *variable TSRMLS_DC
 
 void zend_do_instanceof(znode *result, const znode *expr, const znode *class_znode, int type TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("instanceof");
+	salsa3_dump_int_param(type);
+	salsa3_dump_znode(result);
+	salsa3_dump_znode(expr);
+	salsa3_dump_znode(class_znode);
+	salsa3_end();
 }
 /* }}} */
 
@@ -1375,11 +1409,7 @@ int yylex(znode* zendlval TSRMLS_DC) {
 	}
 
 again:
-	zendlval->op_type = IS_CONST;
-	zendlval->nodeid = CG(zend_nodeid)++;
-	INIT_PZVAL(&zendlval->u.constant);
-
-	Z_TYPE(zendlval->u.constant) = IS_LONG;
+	init_znode(zendlval);
 	retval = lex_scan(&zendlval->u.constant TSRMLS_CC);
 
 #ifdef SALSA3_PHP_DEBUG

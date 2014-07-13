@@ -2,7 +2,7 @@
 
 // base class with member properties and methods
 class Vegetable {
-   var $edible;
+   var $edible = TRUE;
    private $color;
 
    const DEFAULT_COLOR = 'green';
@@ -10,7 +10,14 @@ class Vegetable {
    function Vegetable($edible, $color="green") 
    {
        $this->edible = $edible;
-       $this->color = $color;
+       $this->color = $this->color_to_hex($color);
+   }
+   
+   private function color_to_hex($color) {
+       if($color == "green") {
+           return "#00FF00"; 
+       }
+       return "#000000";
    }
 
    function is_edible() 
@@ -23,18 +30,29 @@ class Vegetable {
        return $this->color;
    }
    
-} // end of class Vegetable
-
-interface Cookable
-{
-    public function cook_it();
-    public function is_cooked();
+   public static function is_vegetable($object) {
+   		return $object instanceof Vegetable;
+   }   
 }
 
-// extends the base class
+interface Cookable {
+    public function cook_it();
+    public function is_cooked();
+    
+    public function cut_for_salad();
+}
+
+trait NotCuttable {
+	public function cut_for_salad() {
+		throw new Exception("Not cuttable for salad!");
+	}
+}
+
 class Spinach extends Vegetable implements Cookable {
    var $cooked = false;
    var $tasty = false;
+   
+   use NotCuttable;
 
    function Spinach($tasty) 
    {
@@ -52,9 +70,11 @@ class Spinach extends Vegetable implements Cookable {
        return $this->cooked;
    }
    
-} // end of class Spinach
+}
 
-$v = new Spinach();
+$v = new Spinach(TRUE);
 $v->cook_it();
+echo Vegetable::is_vegetable($v) . "\n";
+echo $v->what_color() . "\n";
 
 ?>

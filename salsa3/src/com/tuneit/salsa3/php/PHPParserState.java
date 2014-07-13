@@ -24,12 +24,15 @@ public final class PHPParserState {
 		"free",
 		"check_writable_variable",
 		"fetch_simple_variable",
+		"extended_fcall_begin",
 		"extended_fcall_end",
 		"boolean_and_begin",
 		"boolean_or_begin",
 		"initialize_try_catch_element",
 		"first_catch",
-		"bind_catch"
+		"bind_catch",
+		"abstract_method",
+		"do_early_binding"
 	};
 	public static final Set<String> genericStates = 
 			new HashSet<String>(Arrays.asList(genericStateArray));

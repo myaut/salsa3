@@ -5,6 +5,7 @@ import com.tuneit.salsa3.ast.ASTNode;
 import com.tuneit.salsa3.ast.FunctionCall;
 import com.tuneit.salsa3.ast.FunctionName;
 import com.tuneit.salsa3.ast.Literal;
+import com.tuneit.salsa3.ast.NewObject;
 import com.tuneit.salsa3.ast.StaticClassMember;
 
 public class PHPFunctionCall implements PHPParserHandler {
@@ -16,6 +17,7 @@ public class PHPFunctionCall implements PHPParserHandler {
 	private FunctionCall fcall;
 	
 	private boolean beginIsHandled = false;
+	private boolean isNewObject = false;
 
 	public PHPFunctionCall(PHPParserHandler parent) {
 		this.parent = parent;
@@ -50,6 +52,32 @@ public class PHPFunctionCall implements PHPParserHandler {
 			
 			return this;
 		}
+		else if(!beginIsHandled && state.isState("begin_method_call")) {
+			ASTNode leftBracket = state.getNode("left_bracket");
+			
+			fcall = new FunctionCall(leftBracket.cloneNode());			
+			leftBracket.setNode(fcall);
+			
+			beginIsHandled = true;
+			
+			return this;
+		}
+		else if(!beginIsHandled && state.isState("begin_new_object")) {
+			ASTNode newToken = state.getNode("new_token");
+			Literal classTypeNode = (Literal) state.getNode("class_type");
+			String className = classTypeNode.getToken();
+			
+			fcall = new FunctionCall(new FunctionName(className));
+			
+			NewObject newObject = new NewObject(className, fcall);
+			
+			newToken.setNode(newObject);
+			
+			beginIsHandled = true;
+			isNewObject = true;
+			
+			return this;
+		}
 		else if(state.isState("pass_param")) {
 			int op = state.getIntParam("op");
 			ASTNode param = state.getNode("param");
@@ -72,6 +100,9 @@ public class PHPFunctionCall implements PHPParserHandler {
 			result.setNode(fcall);
 			
 			return parent;	
+		}
+		else if(isNewObject && state.isState("end_new_object")) {
+			return parent;
 		}
 				
 		return PHPExpressionHelper.handleState(state, this);

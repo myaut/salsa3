@@ -26,6 +26,15 @@ public class FunctionCall extends ASTNode {
 			this.offset = offset;
 			this.byReference = byReference;
 		}
+		
+		@Override
+		public ASTNode clone() {
+			if(offset == -1) {
+				return new Argument(argument, byReference, key);
+			}
+			
+			return new Argument(argument, byReference, offset);
+		}
 
 		public ASTNode getArgument() {
 			return argument;
@@ -71,7 +80,14 @@ public class FunctionCall extends ASTNode {
 		
 		this.function = function;
 		this.arguments = arguments;
-		this.argCount = 0;
+		this.argCount = arguments.size();
+	}
+	
+	@Override
+	public ASTNode clone() {
+		/* XXX: does deep cloning needed here? */
+		
+		return new FunctionCall(function, arguments);
 	}
 	
 	/**
@@ -134,7 +150,7 @@ public class FunctionCall extends ASTNode {
 	/* Serialization code */
 	static {
 		ASTNodeSerdesPlan plan = ASTNodeSerdes.newPlan(FunctionCall.class);
-		plan.addStringParam(0, "function", false);
+		plan.addNodeParam(0, "function", false);
 		plan.addNodeListParam(1, "arguments", false);
 	}
 }
