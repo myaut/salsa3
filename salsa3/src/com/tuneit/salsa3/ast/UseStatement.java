@@ -7,6 +7,12 @@ public class UseStatement extends ASTNode {
 	private NamespaceName name;
 	private NamespaceName alias;
 	
+	public UseStatement(ASTNode name) {
+		super();
+		this.name = (NamespaceName) name;
+		this.alias = null;
+	}
+	
 	public UseStatement(ASTNode name, ASTNode alias) {
 		super();
 		this.name = (NamespaceName) name;
@@ -30,6 +36,6 @@ public class UseStatement extends ASTNode {
 	static {
 		ASTNodeSerdesPlan plan = ASTNodeSerdes.newPlan(UseStatement.class);
 		plan.addNodeParam(0, "name", false);
-		plan.addNodeParam(1, "alias", false);
+		plan.addNodeParam(1, "alias", true);
 	}
 }

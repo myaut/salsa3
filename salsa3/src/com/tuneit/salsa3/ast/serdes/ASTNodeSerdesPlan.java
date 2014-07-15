@@ -280,6 +280,11 @@ public class ASTNodeSerdesPlan {
 					continue;
 				}
 				
+				if(o == null) {
+					throw new ASTNodeSerdesException("Getter " + getterName + 
+							" returned null for class" + nodeClass.getName());
+				}
+				
 				serializer.addToNode(serializedNode, param.name, param.serialize(serializer, o));
 			} catch (NoSuchMethodException e) {
 				throw new ASTNodeSerdesException("Getter " + getterName + 
