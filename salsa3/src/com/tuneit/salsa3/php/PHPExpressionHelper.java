@@ -71,6 +71,15 @@ public class PHPExpressionHelper {
 		else if(state.isState("unary_op")) {
 			return PHPExpressionHelper.handleUnaryOperation(state, handler);
 		}
+		else if(state.isState("qm_op")) {
+			return PHPExpressionHelper.handleConditionalExpression(state, handler);
+		}
+		else if(state.isState("qm_true")) {
+			return PHPExpressionHelper.handleConditionalExpressionTrue(state, handler);
+		}
+		else if(state.isState("qm_false")) {
+			return PHPExpressionHelper.handleConditionalExpressionFalse(state, handler);
+		}
 		else if(state.isState("begin_function_call") || 
 				state.isState("begin_class_member_function_call") || 
 				state.isState("begin_method_call") ||
@@ -214,6 +223,42 @@ public class PHPExpressionHelper {
 		UnaryOperation uop = new UnaryOperation(getUnaryOpType(uopType), op);
 		
 		result.setNode(uop);
+		
+		return handler;
+	}
+	
+	private static PHPParserHandler handleConditionalExpression(PHPParserState state, PHPParserHandler handler) throws ParserException {
+		ASTNode qmToken = state.getNode("qm_token");
+		ASTNode condition = state.getNode("cond");
+		
+		ConditionalExpression condExpr = new ConditionalExpression(condition);
+		
+		qmToken.setNode(condExpr);
+		
+		return handler;
+	}
+	
+	private static PHPParserHandler handleConditionalExpressionTrue(PHPParserState state, PHPParserHandler handler) throws ParserException {
+		ASTNode qmToken = state.getNode("qm_token");
+		ASTNode trueValue = state.getNode("true_value");
+		
+		ConditionalExpression condExpr = (ConditionalExpression) qmToken;
+		
+		condExpr.setExpressionTrue(trueValue);
+		
+		return handler;
+	}
+
+	private static PHPParserHandler handleConditionalExpressionFalse(PHPParserState state, PHPParserHandler handler) throws ParserException {
+		ASTNode qmToken = state.getNode("qm_token");
+		ASTNode result = state.getNode("result");
+		ASTNode falseValue = state.getNode("false_value");
+		
+		ConditionalExpression condExpr = (ConditionalExpression) qmToken;
+		
+		condExpr.setExpressionFalse(falseValue);
+		
+		result.setNode(condExpr);
 		
 		return handler;
 	}

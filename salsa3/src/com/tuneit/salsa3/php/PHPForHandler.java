@@ -8,6 +8,8 @@ public class PHPForHandler extends PHPStatementHandler implements
 	private ForStatement forStatement;
 	private PHPParserHandler parent;
 	
+	private boolean isForBody = false;
+	
 	public PHPForHandler(PHPParserHandler parent) {
 		this.parent = parent;
 		
@@ -16,13 +18,14 @@ public class PHPForHandler extends PHPStatementHandler implements
 
 	@Override
 	public PHPParserHandler handleState(PHPParserState state) throws ParserException {
-		if(state.isState("for_begin")) {
+		if(!isForBody && state.isState("for_begin")) {
 			forStatement = new ForStatement();
 			
 			setRootNode(forStatement);
+			
 			return this;
 		}
-		else if(state.isState("for_cond")) {
+		else if(!isForBody && state.isState("for_cond")) {
 			ASTNode expr = state.getNode("expr");				
 			
 			forStatement.setCondition(expr);
@@ -31,6 +34,8 @@ public class PHPForHandler extends PHPStatementHandler implements
 			return this;
 		}
 		else if(state.isState("for_before_statement")) {
+			isForBody = true;
+			
 			forStatement.endIncrementStatement();
 			return this;
 		}

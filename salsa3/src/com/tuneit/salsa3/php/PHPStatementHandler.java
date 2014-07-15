@@ -24,7 +24,9 @@ public class PHPStatementHandler implements PHPParserHandler {
 	private static final int ZEND_REQUIRE = 1 << 3;
 	private static final int ZEND_REQUIRE_ONCE = 1 << 4;
 	
+	private static final int ZEND_FETCH_GLOBAL = 0x00000000;
 	private static final int ZEND_FETCH_STATIC = 0x20000000;
+	private static final int ZEND_FETCH_GLOBAL_LOCK = 0x40000000;
 	
 	private static final int ZEND_BRK  = 50;
 	private static final int ZEND_CONT  = 51;
@@ -91,11 +93,14 @@ public class PHPStatementHandler implements PHPParserHandler {
 		else if(state.isState("return")) {
 			return this.handleReturn(state);
 		}
+		else if(state.isState("list_init")) {
+			return this.handleList(state);
+		}
 		else if(state.isState("end_finally")) {
 			/* Finally was not started, spurious state - ignore */
 		}
-		else if(state.isState("fetch_static_variable")) {
-			return this.handleFetchStaticVariable(state);
+		else if(state.isState("fetch_static_variable") || state.isState("fetch_global_variable")) {
+			return this.handleFetchVariable(state);
 		}
 		
 		return PHPExpressionHelper.handleState(state, this);
@@ -328,7 +333,7 @@ public class PHPStatementHandler implements PHPParserHandler {
 		return this;
 	}
 	
-	private PHPParserHandler handleFetchStaticVariable(PHPParserState state) throws ParserException {
+	private PHPParserHandler handleFetchVariable(PHPParserState state) throws ParserException {
 		int fetchType = state.getIntParam("fetch_type");
 		
 		Variable varName = (Variable) state.getNode("varname");
@@ -336,18 +341,26 @@ public class PHPStatementHandler implements PHPParserHandler {
 	
 		VariableDeclaration varDecl = null;
 		
-		if(fetchType != ZEND_FETCH_STATIC) {
-			throw new ParserException("Unknown static variable fetch type " + fetchType + "!");
+		TypeName typeName = new TypeName("mixed");
+		
+		switch(fetchType) { 
+			case ZEND_FETCH_STATIC:
+				typeName.addTypeQualifier("static");
+				break;
+			case ZEND_FETCH_GLOBAL:
+			case ZEND_FETCH_GLOBAL_LOCK:
+				typeName.addTypeQualifier("global");
+				break;
+			default:
+				throw new ParserException("Unknown variable fetch type " + fetchType + "!");
 		}
 		
 		if(staticAssignment == null) {
-			varDecl = new VariableDeclaration(varName, new TypeName("mixed"));
+			varDecl = new VariableDeclaration(varName, typeName);
 		}
 		else {
-			varDecl = new VariableDeclaration(varName, new TypeName("mixed"), staticAssignment);
+			varDecl = new VariableDeclaration(varName, typeName, staticAssignment);
 		}
-		
-		varDecl.addTypeQualifier("static");
 		
 		rootNode.addChild(varDecl);
 		
@@ -360,6 +373,12 @@ public class PHPStatementHandler implements PHPParserHandler {
 		rootNode.addChild(new ReturnStatement(returnExpression));
 		
 		return this;
+	}
+	
+	private PHPParserHandler handleList(PHPParserState state)  throws ParserException {
+		PHPVariableListHandler varListHandler = new PHPVariableListHandler(this);
+		
+		return varListHandler.handleState(state);
 	}
 	
 	@Override

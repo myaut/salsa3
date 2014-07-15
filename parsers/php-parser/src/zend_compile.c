@@ -319,7 +319,11 @@ void zend_do_assign(znode *result, znode *variable, znode *value TSRMLS_DC) /* {
 
 void zend_do_assign_ref(znode *result, const znode *lvar, const znode *rvar TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("assign_ref");
+	salsa3_dump_znode(result);
+	salsa3_dump_znode(lvar);
+	salsa3_dump_znode(rvar);
+	salsa3_end();
 }
 /* }}} */
 
@@ -1113,13 +1117,19 @@ void zend_do_add_array_element(znode *result, const znode *expr, const znode *of
 
 void zend_do_add_static_array_element(znode *result, znode *offset, const znode *expr) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("add_static_array_element");
+	salsa3_dump_znode(result);
+	salsa3_dump_znode(expr);
+	salsa3_dump_znode(offset);
+	salsa3_end();
 }
 /* }}} */
 
 void zend_do_add_list_element(const znode *element TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("add_list_element");
+	salsa3_dump_znode(element);
+	salsa3_end();
 }
 /* }}} */
 
@@ -1137,13 +1147,17 @@ void zend_do_new_list_end(TSRMLS_D) /* {{{ */
 
 void zend_do_list_init(TSRMLS_D) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("list_init");
+	salsa3_end();
 }
 /* }}} */
 
 void zend_do_list_end(znode *result, znode *expr TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("list_end");
+	salsa3_dump_znode(result);
+	salsa3_dump_znode(expr);
+	salsa3_end();
 }
 /* }}} */
 
@@ -1177,7 +1191,11 @@ void zend_do_fetch_lexical_variable(znode *varname, zend_bool is_ref TSRMLS_DC) 
 
 void zend_do_fetch_global_variable(znode *varname, const znode *static_assignment, int fetch_type TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("fetch_global_variable");
+	salsa3_dump_int_param(fetch_type);
+	salsa3_dump_znode(varname);
+	salsa3_dump_znode(static_assignment);
+	salsa3_end();
 }
 /* }}} */
 
@@ -1209,7 +1227,9 @@ void zend_do_indirect_references(znode *result, const znode *num_references, zno
 
 void zend_do_unset(const znode *variable TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("unset");
+	salsa3_dump_znode(variable);
+	salsa3_end();
 }
 /* }}} */
 
@@ -1287,19 +1307,26 @@ void zend_do_declare_end(const znode *declare_token TSRMLS_DC) /* {{{ */
 
 void zend_do_exit(znode *result, const znode *message TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("exit");
+	salsa3_dump_znode(result);
+	salsa3_dump_znode(message);
+	salsa3_end();
 }
 /* }}} */
 
 void zend_do_begin_silence(znode *strudel_token TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("begin_silence");
+	salsa3_dump_znode(strudel_token);
+	salsa3_end();
 }
 /* }}} */
 
 void zend_do_end_silence(const znode *strudel_token TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("end_silence");
+	salsa3_dump_znode(strudel_token);
+	salsa3_end();
 }
 /* }}} */
 
@@ -1317,19 +1344,31 @@ void zend_do_jmp_set_else(znode *result, const znode *false_value, const znode *
 
 void zend_do_begin_qm_op(const znode *cond, znode *qm_token TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("qm_op");
+	salsa3_dump_znode(cond);
+	salsa3_dump_znode(qm_token);
+	salsa3_end();
 }
 /* }}} */
 
 void zend_do_qm_true(const znode *true_value, znode *qm_token, znode *colon_token TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("qm_true");
+	salsa3_dump_znode(true_value);
+	salsa3_dump_znode(qm_token);
+	salsa3_dump_znode(colon_token);
+	salsa3_end();
 }
 /* }}} */
 
 void zend_do_qm_false(znode *result, const znode *false_value, const znode *qm_token, const znode *colon_token TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("qm_false");
+	salsa3_dump_znode(result);
+	salsa3_dump_znode(false_value);
+	salsa3_dump_znode(qm_token);
+	salsa3_dump_znode(colon_token);
+	salsa3_end();
 }
 /* }}} */
 

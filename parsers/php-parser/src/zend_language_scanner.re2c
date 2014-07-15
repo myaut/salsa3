@@ -663,6 +663,7 @@ NEWLINE ("\r"|"\n"|"\r\n")
 }
 
 <ST_IN_SCRIPTING>{DNUM}|{EXPONENT_DNUM} {
+	Z_TYPE(*zendlval) = IS_DOUBLE;
 	zendlval->token = estrndup(yytext, yyleng);
 	return T_DNUMBER;
 }

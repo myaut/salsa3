@@ -107,7 +107,7 @@ public final class PHPParser {
 								" at line " + state.lineNo + " wasn't matched! ");
 				}
 				
-				// System.out.println(handler + " " + state.state + "@" + state.lineNo); 
+				System.out.println(handler + " " + state.state + "@" + state.lineNo); 
 			}
 			
 			int exitValue = process.waitFor();
