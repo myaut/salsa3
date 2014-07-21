@@ -4,6 +4,7 @@ import com.tuneit.salsa3.ParserException;
 import com.tuneit.salsa3.ast.ASTNode;
 import com.tuneit.salsa3.ast.FunctionDeclaration;
 import com.tuneit.salsa3.ast.Literal;
+import com.tuneit.salsa3.ast.TypeName;
 import com.tuneit.salsa3.ast.Variable;
 import com.tuneit.salsa3.ast.VariableDeclaration;
 
@@ -48,7 +49,13 @@ public class PHPFunctionDeclaration extends PHPStatementHandler {
 			String typeName = "";
 			
 			if(classType != null) {
-				typeName = ((Literal) classType).getToken();
+				/* FIXME: Class name hints */ 
+				if(classType instanceof TypeName) {
+					typeName = ((TypeName) classType).getTypeName();
+				}
+				else {
+					typeName = "FIXME_CLASS_NAME_HINTS";
+				}
 			}
 			
 			switch(op) {

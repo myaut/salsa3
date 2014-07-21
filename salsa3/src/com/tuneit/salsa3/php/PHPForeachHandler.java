@@ -17,7 +17,7 @@ public class PHPForeachHandler extends PHPStatementHandler implements
 
 	@Override
 	public PHPParserHandler handleState(PHPParserState state) throws ParserException {
-		if(state.isState("foreach_begin")) {
+		if(!inStatement && state.isState("foreach_begin")) {
 			ASTNode array = state.getNode("array");
 			
 			foreachStatement = new ForeachStatement(array);
@@ -25,7 +25,7 @@ public class PHPForeachHandler extends PHPStatementHandler implements
 			setRootNode(foreachStatement);
 			return this;
 		}
-		else if(state.isState("foreach_cont")) {
+		else if(!inStatement && state.isState("foreach_cont")) {
 			ASTNode key = state.getNodeOptional("key");				
 			ASTNode value = state.getNode("value");
 			

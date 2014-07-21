@@ -83,7 +83,8 @@ public class PHPExpressionHelper {
 		else if(state.isState("begin_function_call") || 
 				state.isState("begin_class_member_function_call") || 
 				state.isState("begin_method_call") ||
-				state.isState("begin_new_object")) {
+				state.isState("begin_new_object") ||
+				state.isState("begin_dynamic_function_call")) {
 			return PHPExpressionHelper.handleFunctionCall(state, handler);
 		}
 		else if(state.isState("array_dim")) {
@@ -101,13 +102,16 @@ public class PHPExpressionHelper {
 		else if(state.isState("print")) {
 			return PHPExpressionHelper.handlePrint(state, handler);
 		}
+		else if(state.isState("exit")) {
+			return PHPExpressionHelper.handleExit(state, handler);
+		}
 		else if(state.isState("init_array")) {
 			/* ArrayLiteral already created in ZNode2AST */
 			if(state.hasNode("expr")) {
 				return PHPExpressionHelper.handleArrayElement(state, handler);
 			}
 		}
-		else if(state.isState("add_array_element")) {
+		else if(state.isState("add_array_element") || state.isState("add_static_array_element")) {
 			return PHPExpressionHelper.handleArrayElement(state, handler);
 		}
 		else if(state.isState("cast")) {
@@ -133,18 +137,34 @@ public class PHPExpressionHelper {
 	}
 
 	private static PHPParserHandler handlePrint(PHPParserState state, PHPParserHandler handler) throws ParserException {
-		ASTNode result = state.getNode("result");
-		ASTNode arg = state.getNode("arg");
+		ASTNode arg = state.getNode("arg");		
+		FunctionCall fcall = PHPExpressionHelper.handleSpecialFunction(state, handler, "print");
 		
-		/* Treat echo operator as a special function call */
-		FunctionCall fcall = new FunctionCall(new FunctionName("print")); 			
-		fcall.addArgument(arg, false);
-		
-		result.setNode(fcall);
-		
-		addChildToHandler(fcall, handler);
+		fcall.addArgument(arg);
 		
 		return handler;
+	}
+	
+	private static PHPParserHandler handleExit(PHPParserState state, PHPParserHandler handler) throws ParserException {
+		ASTNode message = state.getNodeOptional("message");		
+		FunctionCall fcall = PHPExpressionHelper.handleSpecialFunction(state, handler, "exit");
+		
+		if(message != null) {
+			fcall.addArgument(message);
+		}
+		
+		return handler;
+	}
+	
+	private static FunctionCall handleSpecialFunction(PHPParserState state, PHPParserHandler handler, String name) throws ParserException {
+		ASTNode result = state.getNode("result");
+		
+		FunctionCall fcall = new FunctionCall(new FunctionName(name)); 				
+		
+		result.setNode(fcall);		
+		addChildToHandler(fcall, handler);
+		
+		return fcall;
 	}
 	
 	private static PHPParserHandler handleBinaryOperation(PHPParserState state, PHPParserHandler handler) throws ParserException {
@@ -277,11 +297,16 @@ public class PHPExpressionHelper {
 	private static PHPParserHandler handleArrayIndexAccess(PHPParserState state, PHPParserHandler handler) throws ParserException {
 		ASTNode result = state.getNode("result");
 		ASTNode parent = state.getNode("parent");
-		ASTNode dim = state.getNode("dim");
+		ASTNode dim = state.getNodeOptional("dim");
 		
-		ArrayIndex arrayIndex = new ArrayIndex(parent, dim);
-		
-		result.setNode(arrayIndex);
+		if(dim != null) {
+			ArrayIndex arrayIndex = new ArrayIndex(parent, dim);		
+			result.setNode(arrayIndex);
+		}
+		else {
+			PHPAddToArray addToArray = new PHPAddToArray(parent);
+			result.setNode(addToArray);
+		}
 		
 		return handler;
 	}
@@ -306,7 +331,7 @@ public class PHPExpressionHelper {
 		}
 		
 		FunctionCall fcall = new FunctionCall(function); 			
-		fcall.addArgument(var, false);
+		fcall.addArgument(var);
 		
 		result.setNode(fcall);
 		
@@ -357,12 +382,20 @@ public class PHPExpressionHelper {
 	}
 	
 	private static PHPParserHandler handleArrayElement(PHPParserState state, PHPParserHandler handler) throws ParserException {
-		ArrayLiteral array = (ArrayLiteral) state.getNode("result");
+		ASTNode result = state.getNode("result");
 		ASTNode value = state.getNode("expr");
 		ASTNode key = state.getNodeOptional("offset");
+		ArrayLiteral array = null;
 		
-		ArrayLiteral.Element el = new ArrayLiteral.Element(value, key);
+		if(result instanceof ArrayLiteral) {
+			array = (ArrayLiteral) result;
+		}
+		else {
+			array = new ArrayLiteral();
+			result.setNode(array);
+		}
 		
+		ArrayLiteral.Element el = new ArrayLiteral.Element(value, key);		
 		array.addElement(el);
 		
 		return handler;
@@ -409,11 +442,17 @@ public class PHPExpressionHelper {
 	private static PHPParserHandler handleFetchProperty(PHPParserState state, PHPParserHandler handler) throws ParserException {
 		ASTNode result = state.getNode("result");
 		ASTNode object = state.getNode("object");
-		Literal property = (Literal) state.getNode("property");
+		ASTNode propertyNode = state.getNode("property");
 		
-		InstanceMember instanceMember = new InstanceMember(object, property.getToken());
-		
-		result.setNode(instanceMember);
+		if(propertyNode instanceof Literal) {
+			Literal property = (Literal) propertyNode;
+			InstanceMember instanceMember = new InstanceMember(object, property.getToken());
+			result.setNode(instanceMember);
+		}
+		else {
+			DynamicInstanceMember instanceMember = new DynamicInstanceMember(object, propertyNode);
+			result.setNode(instanceMember);
+		}
 		
 		return handler;
 	}
@@ -506,6 +545,8 @@ public class PHPExpressionHelper {
 			return "int";
 		case IS_DOUBLE:
 			return "double";
+		case IS_STRING:
+			return "string";
 		case IS_BOOL:
 			return "bool";
 		case IS_ARRAY:

@@ -7,6 +7,7 @@ import com.tuneit.salsa3.ast.FunctionName;
 import com.tuneit.salsa3.ast.Literal;
 import com.tuneit.salsa3.ast.NewObject;
 import com.tuneit.salsa3.ast.StaticClassMember;
+import com.tuneit.salsa3.ast.TakeReference;
 
 public class PHPFunctionCall implements PHPParserHandler {
 	private static final int ZEND_SEND_VAL = 65;
@@ -78,6 +79,16 @@ public class PHPFunctionCall implements PHPParserHandler {
 			
 			return this;
 		}
+		else if(!beginIsHandled && state.isState("begin_dynamic_function_call")) {
+			ASTNode functionNameNode = state.getNode("function_name");
+			
+			fcall = new FunctionCall(functionNameNode);			
+			functionNameNode.setNode(fcall);
+						
+			beginIsHandled = true;
+			
+			return this;
+		}
 		else if(state.isState("pass_param")) {
 			int op = state.getIntParam("op");
 			ASTNode param = state.getNode("param");
@@ -85,10 +96,10 @@ public class PHPFunctionCall implements PHPParserHandler {
 			switch(op) {
 			case ZEND_SEND_VAL:
 			case ZEND_SEND_VAR:
-				fcall.addArgument(param, false);
+				fcall.addArgument(param);
 				break;
 			case ZEND_SEND_REF:
-				fcall.addArgument(param, true);
+				fcall.addArgument(new TakeReference(param));
 				break;
 			}
 			

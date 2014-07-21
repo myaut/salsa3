@@ -19,20 +19,33 @@ public final class PHPParserState {
 	
 	private static final String genericStateArray[] = {
 		"extended_info",
+		
+		/* We handle variables internally in salsa3-php-parser by assigning
+		 * them a special type, ignore these states */
 		"begin_variable_parse",
 		"end_variable_parse",
 		"free",
 		"check_writable_variable",
 		"fetch_simple_variable",
+				
 		"extended_fcall_begin",
 		"extended_fcall_end",
+		
+		/* Boolean bops */
 		"boolean_and_begin",
 		"boolean_or_begin",
+		
+		/* Try-catch */
 		"initialize_try_catch_element",
 		"first_catch",
 		"bind_catch",
+		
+		/* Methods are determined from class declaration, no additional info needed */
 		"abstract_method",
-		"do_early_binding"
+		"do_early_binding",
+		/* Silence is internal PHP parser hint, ignore it for our analysis */
+		"begin_silence",
+		"end_silence"
 	};
 	public static final Set<String> genericStates = 
 			new HashSet<String>(Arrays.asList(genericStateArray));

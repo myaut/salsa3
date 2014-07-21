@@ -11,29 +11,26 @@ public class FunctionCall extends ASTNode {
 		public ASTNode argument;
 		public String key;
 		public int offset;
-		public boolean byReference;
 		
-		public Argument(ASTNode argument, Boolean byReference, String key) {
+		public Argument(ASTNode argument, String key) {
 			this.argument = argument;
 			this.key = key;
 			this.offset = -1;
-			this.byReference = byReference;
 		}
 		
-		public Argument(ASTNode argument, Boolean byReference, Integer offset) {
+		public Argument(ASTNode argument, Integer offset) {
 			this.argument = argument;
 			this.key = null;
 			this.offset = offset;
-			this.byReference = byReference;
 		}
 		
 		@Override
 		public ASTNode clone() {
 			if(offset == -1) {
-				return new Argument(argument, byReference, key);
+				return new Argument(argument, key);
 			}
 			
-			return new Argument(argument, byReference, offset);
+			return new Argument(argument, offset);
 		}
 
 		public ASTNode getArgument() {
@@ -47,18 +44,13 @@ public class FunctionCall extends ASTNode {
 		public Integer getOffset() {
 			return offset;
 		}
-
-		public Boolean getByReference() {
-			return byReference;
-		}
 		
 		/* Serialization code */
 		static {
 			ASTNodeSerdesPlan plan = ASTNodeSerdes.newPlan(Argument.class);
 			plan.addNodeParam(0, "argument", false);
-			plan.addBooleanParam(1, "byReference", false);
-			plan.addIntegerParam(2, "offset", true);
-			plan.addStringParam(2, "key", true);
+			plan.addIntegerParam(1, "offset", true);
+			plan.addStringParam(1, "key", true);
 		}
 	}
 	
@@ -94,16 +86,16 @@ public class FunctionCall extends ASTNode {
 	 * @param argument Argument expression
 	 * @param key For key-value arguments, key
 	 */
-	public void addArgument(ASTNode argument, boolean byReference, String key) {
-		Argument arg = new Argument(argument, byReference, key);
+	public void addArgument(ASTNode argument, String key) {
+		Argument arg = new Argument(argument, key);
 		
 		this.arguments.add(arg);
 		
 		argument.reuseInExpression(this);
 	}
 	
-	public void addArgument(ASTNode argument, boolean byReference) {
-		Argument arg = new Argument(argument, byReference, this.argCount++);
+	public void addArgument(ASTNode argument) {
+		Argument arg = new Argument(argument, this.argCount++);
 		
 		this.arguments.add(arg);
 		

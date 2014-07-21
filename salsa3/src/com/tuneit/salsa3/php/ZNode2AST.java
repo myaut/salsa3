@@ -11,8 +11,10 @@ public class ZNode2AST {
 	private static final int IS_LONG = 1;
 	private static final int IS_DOUBLE = 2;
 	private static final int IS_BOOL = 3;
+	private static final int IS_ARRAY = 4;
 	private static final int IS_STRING = 6;
 	private static final int IS_CONSTANT = 8;
+	private static final int IS_CALLABLE = 10;
 	private static final int IS_VARIABLE = 12;
 	private static final int IS_CONSTANT_ARRAY = 11;
 	private static final int IS_TOKEN = 13;
@@ -54,6 +56,13 @@ public class ZNode2AST {
 			return new ArrayLiteral();
 		case IS_TOKEN:
 			return new ASTNode();
+		
+		/* Callable and array znodes are used only in type-hint 
+		 * expressions, so create a typename */
+		case IS_ARRAY:
+			return new TypeName("array");
+		case IS_CALLABLE:
+			return new TypeName("callable");
 		}
 		
 		throw new ParserException("Couldn't convert to AST: " + zNode);

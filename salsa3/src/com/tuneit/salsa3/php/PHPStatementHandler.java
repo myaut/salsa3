@@ -36,6 +36,9 @@ public class PHPStatementHandler implements PHPParserHandler {
 		if(state.isState("echo")) {
 			return this.handleEcho(state);
 		}
+		else if(state.isState("unset")) {
+			return this.handleUnset(state);
+		}
 		else if(state.isState("assign")) {
 			/* SALSA considers assign and binary_assign_op as statement. Despite the fact
 			 * they may be used in expression context, i.e:
@@ -46,6 +49,9 @@ public class PHPStatementHandler implements PHPParserHandler {
 			 * which is equivalent to upper example. This may be hacked like function calls did,
 			 * but this approach is easier. */
 			return this.handleAssign(state);
+		}
+		else if(state.isState("assign_ref")) {
+			return this.handleAssignRef(state);
 		}
 		else if(state.isState("declare_constant")) {
 			return this.handleConstant(state);
@@ -111,7 +117,19 @@ public class PHPStatementHandler implements PHPParserHandler {
 		
 		/* Treat echo operator as a special function call */
 		FunctionCall fcall = new FunctionCall(new FunctionName("echo")); 			
-		fcall.addArgument(arg, false);
+		fcall.addArgument(arg);
+		
+		rootNode.addChild(fcall);
+		
+		return this;
+	}
+	
+	public PHPParserHandler handleUnset(PHPParserState state) throws ParserException {
+		ASTNode variable = state.getNode("variable");
+		
+		/* Treat echo operator as a special function call */
+		FunctionCall fcall = new FunctionCall(new FunctionName("unset")); 			
+		fcall.addArgument(variable);
 		
 		rootNode.addChild(fcall);
 		
@@ -123,6 +141,16 @@ public class PHPStatementHandler implements PHPParserHandler {
 		ASTNode variable = state.getNode("variable");
 		
 		Assign assign = new Assign(variable, value);
+		rootNode.addChild(assign);
+		
+		return this;
+	}
+	
+	public PHPParserHandler handleAssignRef(PHPParserState state) throws ParserException {
+		ASTNode value = state.getNode("rvar");
+		ASTNode variable = state.getNode("lvar");
+		
+		Assign assign = new Assign(variable, new TakeReference(value));
 		rootNode.addChild(assign);
 		
 		return this;

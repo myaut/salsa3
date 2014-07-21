@@ -20,6 +20,7 @@ import org.json.JSONException;
 
 import com.tuneit.salsa3.ast.ASTNode;
 import com.tuneit.salsa3.ast.ASTStatement;
+import com.tuneit.salsa3.ast.FunctionDeclaration;
 import com.tuneit.salsa3.ast.serdes.ASTNodeJSONDeserializer;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesException;
 import com.tuneit.salsa3.ast.serdes.ASTStatementJSONDeserializer;
@@ -31,7 +32,12 @@ import com.tuneit.salsa3.ast.visual.VisualNode;
 import com.tuneit.salsa3.php.*;
 
 public final class PHPParser {
-	static String phpParserBinary = "/pool/devel/salsa3/projects/parsers/php-parser/build/salsa3-php-parser";
+	public static String phpParserBinary = "/pool/devel/salsa3/projects/parsers/php-parser/build/salsa3-php-parser";
+	
+	/* FIXME: Test variables */
+	public static String phpParserTemp = "/pool/devel/salsa3/tmp";
+	public static boolean traceStateHandlers = false;
+	public static boolean visMultipleFunctions = true;
 	
 	private String filePath;
 	private PHPParserHandler handler;
@@ -107,7 +113,9 @@ public final class PHPParser {
 								" at line " + state.lineNo + " wasn't matched! ");
 				}
 				
-				System.out.println(handler + " " + state.state + "@" + state.lineNo); 
+				if(traceStateHandlers) {
+					System.out.println(handler + " " + state.state + "@" + state.lineNo);
+				}
 			}
 			
 			int exitValue = process.waitFor();
@@ -129,12 +137,16 @@ public final class PHPParser {
 			throw pe;
 		}
 		catch(JSONException je) {
-			ParserException pe = new ParserException("JSON error: " + line, je);
+			ParserException pe = new ParserException("JSON error at " + line, je);
+			throw pe;
+		}
+		catch(ClassCastException cce) {
+			ParserException pe = new ParserException("Class cast exception for at " + line, cce);
 			throw pe;
 		}
 	}
 	
-	public static void visualizeStatement(ASTStatement root) throws ASTNodeSerdesException, IOException {		
+	public static void visualizeStatement(ASTStatement root, String destination) throws ASTNodeSerdesException, IOException {		
 		ASTStatementVisualizer visualizer = new ASTStatementVisualizer();
 		VisualNode vn = (VisualNode) root.serializeStatement(visualizer);
 		
@@ -149,7 +161,7 @@ public final class PHPParser {
 		g.setColor(Color.BLACK);
 		vn.render(image.getGraphics());
 		
-		File outputfile = new File("ast.png");
+		File outputfile = new File(destination);
 		ImageIO.write(image, "png", outputfile);
 	}
 	
@@ -169,7 +181,23 @@ public final class PHPParser {
 		
 		try {
 			ASTStatement root = parser.parse();			
-			visualizeStatement(serdesStatement(root));
+			ASTStatement newRoot = serdesStatement(root);
+			
+			if(visMultipleFunctions) {
+				for(ASTNode node : newRoot.getChildren()) {
+					if(node instanceof FunctionDeclaration) {
+						FunctionDeclaration fdecl = (FunctionDeclaration) node;
+						String destPath = phpParserTemp + File.separator + fdecl.getFunctionName() + ".png";
+						
+						System.out.println("Writing " + destPath + " ...");
+						
+						visualizeStatement(fdecl, destPath);
+					}
+				}
+			}
+			else {
+				visualizeStatement(newRoot, "ast.png");
+			}
 		}
 		catch(Exception e) {
 			e.printStackTrace();
