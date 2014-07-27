@@ -1,5 +1,5 @@
 /bin
 .settings
 .classpath
-org.json.jar
-ast.png
+lib/
+spring-shell.log
