@@ -11,6 +11,7 @@ import com.tuneit.salsa3.RepositoryManager;
 import com.tuneit.salsa3.RepositoryWalkTask;
 import com.tuneit.salsa3.TaskManager;
 import com.tuneit.salsa3.model.Repository;
+import com.tuneit.salsa3.model.Source;
 
 @Component
 public final class CLIRepository implements CommandMarker {
@@ -67,7 +68,65 @@ public final class CLIRepository implements CommandMarker {
 		
 		tm.addTask(new RepositoryWalkTask(repository));
 		
-		return "Walking repository '" + name + "' is started. \n Use task list to monitor activity";
+		return "Walking repository '" + name + "' is started.\nUse task list to monitor activity";
+	}
+	
+	@CliCommand(value = "repo sources", help = "Show repository sources") 
+	public String sources(
+			@CliOption(key = {"name"}, mandatory = true, help = "Name of repository") 
+				final String name,
+			@CliOption(key = {"parsed"}, mandatory = false, help = "Show only parsed sources",
+					specifiedDefaultValue = "true", unspecifiedDefaultValue = "false") 
+				final Boolean parsed,
+			@CliOption(key = {"not-parsed"}, mandatory = false, help = "Show only sources that are not parsed",
+					specifiedDefaultValue = "true", unspecifiedDefaultValue = "false")
+				final Boolean notParsed,
+			@CliOption(key = {"failed"}, mandatory = false, help = "Show only failed sources",
+					specifiedDefaultValue = "true", unspecifiedDefaultValue = "false") 
+				final Boolean failed) {
+		
+		if((parsed && notParsed) || (parsed && failed) || (failed && notParsed)) {
+			throw new IllegalArgumentException("--parsed, --not-parsed and --failed switches are mutually exclusive");
+		}
+		
+		TableView tv = new TableView();
+		RepositoryManager rm = RepositoryManager.getInstance();
+		
+		Repository repository = rm.getRepositoryByName(name);
+		
+		if(repository == null) {
+			throw new IllegalArgumentException("No such repository '" + name + "'!");
+		}
+		
+		tv.newRow()
+			.append("ID")
+			.append(" ")
+			.append("PATH")
+			.append("\n\tERROR");
+		
+		for(Source source : rm.getSources(repository)) {
+			boolean parseFailed = source.getParseResult() != null && source.getParseResult().length() > 0;
+			
+			if(parsed && !source.isParsed())
+				continue;				
+			if(notParsed && source.isParsed())
+				continue;
+			if(failed && !parseFailed)
+				continue;
+			
+			TableView.Row row = tv.newRow();
+						
+			row
+				.append(source.getId())
+				.append(source.isParsed() ? "+" : " ")
+				.append(source.getPath());
+			
+			if(parseFailed) {
+				row.append("\n\t" + source.getParseResult());
+			}
+		}
+		
+		return tv.toString();
 	}
 	
 	@CliCommand(value = "repo delete", help = "Delete SALSA3 repository") 

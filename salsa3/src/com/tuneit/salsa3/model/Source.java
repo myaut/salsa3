@@ -11,6 +11,7 @@ public class Source {
 	private String path;
 	private boolean isParsed;
 	
+	@Lob
 	private String parseResult;
 	
 	@ManyToOne

@@ -2,15 +2,38 @@ package com.tuneit.salsa3;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 public class TaskManager {
+	private static class ExceptionCatchingThreadFactory implements ThreadFactory {
+		private static Logger log = Logger.getLogger(TaskExecutor.class.getName());	
+		
+	    private final ThreadFactory delegate;
+
+	    private ExceptionCatchingThreadFactory(ThreadFactory delegate) {
+	        this.delegate = delegate;
+	    }
+
+	    public Thread newThread(final Runnable r) {
+	        Thread t = delegate.newThread(r);
+	        t.setUncaughtExceptionHandler(new UncaughtExceptionHandler() {
+	            @Override
+	            public void uncaughtException(Thread t, Throwable e) {
+	                // Ignore
+	            }
+	        });
+	        return t;
+	    }
+	}
+	
 	private static class TaskExecutor extends ThreadPoolExecutor {
 		private static Logger log = Logger.getLogger(TaskExecutor.class.getName());		
 		
@@ -116,6 +139,9 @@ public class TaskManager {
 		this.queue = new LinkedBlockingQueue<Runnable>();
 		this.executor = new TaskExecutor(CORE_POOL_SIZE, MAXIMUM_POOL_SIZE, KEEP_ALIVE_TIME, 
 										 TIME_UNIT, queue);
+		
+		this.executor.setThreadFactory(
+				new ExceptionCatchingThreadFactory(this.executor.getThreadFactory()));
 		
 		Runtime.getRuntime().addShutdownHook(new TaskShutdownThread(this.executor));
 	}

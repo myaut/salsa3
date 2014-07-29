@@ -25,18 +25,17 @@ public class CLITasks implements CommandMarker {
 			.append("TASK")
 			.append("\n\tEXCEPTION");
 		
-		for(Task task : tasks) {
-			Throwable throwable = task.getThrowable();
-			String excInfo = 
-					(throwable == null)
-						? "" 
-						: throwable.toString();
-			
-			tv.newRow()
+		for(Task task : tasks) {		
+			TableView.Row row = 
+			  tv.newRow()
 				.append(task.getTaskId())
 				.append(task.getState().toString())
-				.append(task.getDescription())
-				.append("\n\t" + excInfo);
+				.append(task.getDescription());
+			
+			Throwable throwable = task.getThrowable();
+			if(throwable != null) {
+				row.append("\n\t" + throwable.toString());
+			}
 		}
 		
 		return tv.toString();

@@ -12,11 +12,16 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 import javax.persistence.Persistence;
 import javax.persistence.Query;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaDelete;
+import javax.persistence.criteria.Root;
 
 public final class RepositoryManager {
 	private static final String PERSISTENCE_UNIT_NAME = "salsaPU";
 	private static RepositoryManager _instance = null;
 	
+	/* FIXME: This architecture doesn't support parallel parsing of multiple repos.
+	 * Have to replace transaction -> entity managers here */
 	private static class SourceWalkTransaction {
 		private AtomicInteger referenceCount;
 		private EntityTransaction transaction;
@@ -81,17 +86,46 @@ public final class RepositoryManager {
 	}
 	
 	public void deleteRepository(String repoName) {		
+		CriteriaBuilder cb = this.em.getCriteriaBuilder();
 		Repository repo = getRepositoryByName(repoName);
+		
+		CriteriaDelete<Source> deleteSourcesCriteria = cb.createCriteriaDelete(Source.class);
+		Root<Source> e = deleteSourcesCriteria.from(Source.class);
+		deleteSourcesCriteria.where(cb.equal(e.get("repository"), repo));
+		Query deleteSourcesQuery = em.createQuery(deleteSourcesCriteria);
 		
 		em.getTransaction().begin();
 		
-		for(Source source : repo.getSources()) {
-			/* FIXME: delete associated code, etc. */
-			em.remove(source);
-		}
+		deleteSourcesQuery.executeUpdate();
 		
 		em.remove(repo);
 		em.getTransaction().commit();
+	}
+	
+	@SuppressWarnings("unchecked")
+	public List<Source> getSources(Repository repository) {
+		Query query = em.createQuery("SELECT s FROM Source s WHERE s.repository = :repository");
+		query.setParameter("repository", repository);
+		
+		return (List<Source>) query.getResultList();
+	}
+	
+	@SuppressWarnings("unchecked")
+	public Source getSourceById(Repository repository, Integer id) {
+		Query query = em.createQuery("SELECT s FROM Source s WHERE s.repository = :repository AND s.id = :id");
+		query.setParameter("repository", repository);
+		query.setParameter("id", id);
+		
+		return (Source) query.getSingleResult();
+	}
+	
+	@SuppressWarnings("unchecked")
+	public Source getSourceByPath(Repository repository, String path) {
+		Query query = em.createQuery("SELECT s FROM Source s WHERE s.repository = :repository AND s.path = :path");
+		query.setParameter("repository", repository);
+		query.setParameter("path", path);
+		
+		return (Source) query.getSingleResult();
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -141,5 +175,16 @@ public final class RepositoryManager {
 		
 		Source source = new Source(repository, path); 
 		em.persist(source);
+	}
+	
+	public synchronized void onSourceParsed(Source source, boolean isParsed, Throwable result) {
+		em.getTransaction().begin();
+		
+		source.setParsed(isParsed);
+		if(result != null) {
+			source.setParseResult(result.toString());
+		}
+		
+		em.getTransaction().commit();
 	}
 }

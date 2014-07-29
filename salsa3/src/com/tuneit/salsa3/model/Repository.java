@@ -16,9 +16,6 @@ public class Repository {
 	private Language language;
 	private String path;
 	
-	@OneToMany
-	private List<Source> sources;
-	
 	public Repository() {
 		this.path = null;
 		this.repositoryName = null;
@@ -49,10 +46,6 @@ public class Repository {
 
 	public int getId() {
 		return id;
-	}
-	
-	public List<Source> getSources() {
-		return sources;
 	}
 
 	public Language getLanguage() {
