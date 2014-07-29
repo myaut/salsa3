@@ -90,11 +90,17 @@ public class PHPExpressionHelper {
 		else if(state.isState("array_dim")) {
 			return PHPExpressionHelper.handleArrayIndexAccess(state, handler);
 		}
+		else if(state.isState("fetch_string_offset")) {
+			return PHPExpressionHelper.handleStringIndexAccess(state, handler);
+		}
 		else if(state.isState("isset_or_isempty")) {
 			return PHPExpressionHelper.handleIssetOrIsempty(state, handler);
 		}
 		else if(state.isState("fetch_constant")) {
 			return PHPExpressionHelper.handleConstant(state, handler);
+		}
+		else if(state.isState("fetch_static_member")) {
+			return PHPExpressionHelper.handleStaticMember(state, handler);
 		}
 		else if(state.isState("build_namespace_name")) {
 			return PHPExpressionHelper.handleNamespaceName(state, handler);
@@ -128,6 +134,9 @@ public class PHPExpressionHelper {
 		}
 		else if(state.isState("instanceof")) {
 			return PHPExpressionHelper.handleInstanceOf(state, handler);
+		}
+		else if(state.isState("clone")) {
+			return PHPExpressionHelper.handleClone(state, handler);
 		}
 		else if(state.isGenericState()) {
 			return handler;
@@ -311,6 +320,17 @@ public class PHPExpressionHelper {
 		return handler;
 	}
 	
+	private static PHPParserHandler handleStringIndexAccess(PHPParserState state, PHPParserHandler handler) throws ParserException {
+		ASTNode result = state.getNode("result");
+		ASTNode parent = state.getNode("parent");
+		ASTNode offset = state.getNode("offset");
+		
+		ArrayIndex arrayIndex = new ArrayIndex(parent, offset);		
+		result.setNode(arrayIndex);
+		
+		return handler;
+	}
+	
 	private static PHPParserHandler handleIssetOrIsempty(PHPParserState state, PHPParserHandler handler) throws ParserException {
 		int type = state.getIntParam("type");
 		
@@ -345,6 +365,21 @@ public class PHPExpressionHelper {
 		String constantName = constantNameNode.getToken();
 		
 		result.setNode(new Constant(constantName));
+		
+		return handler;
+	}
+	
+	private static PHPParserHandler handleStaticMember(PHPParserState state, PHPParserHandler handler) throws ParserException {
+		ASTNode result = state.getNode("result");
+		Variable varResult = (Variable) result;
+		Literal classNameNode = (Literal) state.getNode("class_name");
+		
+		String className = classNameNode.getToken();
+		
+		StaticClassMember member = new StaticClassMember(varResult.getVarName());
+		member.addClassName(className);
+		
+		result.setNode(member);		
 		
 		return handler;
 	}
@@ -467,6 +502,19 @@ public class PHPExpressionHelper {
 		InstanceOf instanceOf = new InstanceOf(className, expression);
 		
 		result.setNode(instanceOf);
+		
+		return handler;
+	}
+	
+	private static PHPParserHandler handleClone(PHPParserState state, PHPParserHandler handler)  throws ParserException {
+		ASTNode result = state.getNode("result");
+		ASTNode expression = state.getNode("expr");
+		
+		DynamicInstanceMember cloneFunction = 
+				new DynamicInstanceMember(expression, new Literal(Literal.Type.LIT_STRING, "__clone"));
+		FunctionCall cloneCall = new FunctionCall(cloneFunction);
+		
+		result.setNode(cloneCall);
 		
 		return handler;
 	}

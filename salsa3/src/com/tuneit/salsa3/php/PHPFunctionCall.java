@@ -65,12 +65,18 @@ public class PHPFunctionCall implements PHPParserHandler {
 		}
 		else if(!beginIsHandled && state.isState("begin_new_object")) {
 			ASTNode newToken = state.getNode("new_token");
-			Literal classTypeNode = (Literal) state.getNode("class_type");
-			String className = classTypeNode.getToken();
+			ASTNode classTypeNode = state.getNode("class_type");
 			
-			fcall = new FunctionCall(new FunctionName(className));
+			if(classTypeNode instanceof Literal) {
+				Literal litClassName = (Literal) classTypeNode;
+				fcall = new FunctionCall(new FunctionName(litClassName.getToken()));
+			}
+			else {
+				fcall = new FunctionCall(classTypeNode);
+			}
 			
-			NewObject newObject = new NewObject(className, fcall);
+			
+			NewObject newObject = new NewObject(classTypeNode, fcall);
 			
 			newToken.setNode(newObject);
 			

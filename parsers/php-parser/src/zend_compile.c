@@ -254,7 +254,10 @@ void fetch_simple_variable(znode *result, znode *varname, int bp TSRMLS_DC) /* {
 
 void zend_do_fetch_static_member(znode *result, znode *class_name TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("fetch_static_member");
+	salsa3_dump_znode(result);
+	salsa3_dump_znode(class_name);
+	salsa3_end();
 }
 /* }}} */
 
@@ -276,7 +279,11 @@ void fetch_array_dim(znode *result, const znode *parent, const znode *dim TSRMLS
 
 void fetch_string_offset(znode *result, const znode *parent, const znode *offset TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("fetch_string_offset");
+	salsa3_dump_znode(result);
+	salsa3_dump_znode(parent);
+	salsa3_dump_znode(offset);
+	salsa3_end();
 }
 /* }}} */
 
@@ -477,12 +484,14 @@ int zend_do_verify_access_types(const znode *current_access_type, const znode *n
 
 void zend_do_begin_function_declaration(znode *function_token, znode *function_name, int is_method, int return_reference, znode *fn_flags_znode TSRMLS_DC) /* {{{ */
 {
+	int fn_flags = Z_LVAL(fn_flags_znode->u.constant);
+
 	salsa3_begin("begin_function_declaration");
 	salsa3_dump_int_param(is_method);
 	salsa3_dump_int_param(return_reference);
+	salsa3_dump_int_param(fn_flags);
 	salsa3_dump_znode(function_token);
 	salsa3_dump_znode(function_name);
-	salsa3_dump_znode(fn_flags_znode);
 	salsa3_end();
 }
 /* }}} */
@@ -542,13 +551,19 @@ void zend_do_begin_method_call(znode *left_bracket TSRMLS_DC) /* {{{ */
 
 void zend_do_clone(znode *result, const znode *expr TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("clone");
+	salsa3_dump_znode(result);
+	salsa3_dump_znode(expr);
+	salsa3_end();
 }
 /* }}} */
 
 void zend_do_begin_dynamic_function_call(znode *function_name, int ns_call TSRMLS_DC) /* {{{ */
 {
-	salsa3_unimplimented();
+	salsa3_begin("begin_dynamic_function_call");
+	salsa3_dump_int_param(ns_call);
+	salsa3_dump_znode(function_name);
+	salsa3_end();
 }
 /* }}} */
 
@@ -926,6 +941,8 @@ void zend_do_case_before_statement(const znode *case_list, znode *case_token, co
 
 void zend_do_case_after_statement(znode *result, const znode *case_token TSRMLS_DC) /* {{{ */
 {
+	init_znode(result);
+
 	salsa3_begin("case_after_statement");
 	salsa3_dump_znode(result);
 	salsa3_dump_znode(case_token);
@@ -1117,6 +1134,11 @@ void zend_do_add_array_element(znode *result, const znode *expr, const znode *of
 
 void zend_do_add_static_array_element(znode *result, znode *offset, const znode *expr) /* {{{ */
 {
+	zval* zv_result = &result->u.constant;
+	if(Z_TYPE(*zv_result) == IS_UNKNOWN_ZVAL) {
+		Z_TYPE(*zv_result) = IS_CONSTANT_ARRAY;
+	}
+
 	salsa3_begin("add_static_array_element");
 	salsa3_dump_znode(result);
 	salsa3_dump_znode(expr);

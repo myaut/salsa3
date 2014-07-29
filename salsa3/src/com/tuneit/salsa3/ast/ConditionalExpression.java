@@ -22,6 +22,10 @@ public class ConditionalExpression extends ASTNode {
 		this.expressionTrue = null;
 		this.expressionFalse = null;
 	}
+	
+	public ASTNode clone() {
+		return new ConditionalExpression(condition, expressionTrue, expressionFalse);
+	}
 
 	public ASTNode getExpressionTrue() {
 		return expressionTrue;

@@ -12,6 +12,10 @@ public class InstanceOf extends ASTNode {
 		this.className = className;
 		this.expression = expression;
 	}
+	
+	public ASTNode clone() throws CloneNotSupportedException {
+		return new InstanceOf(className, (ASTNode) expression.clone());
+	}
 
 	public ASTNode getExpression() {
 		return expression;

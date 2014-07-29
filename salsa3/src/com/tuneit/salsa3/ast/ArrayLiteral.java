@@ -3,6 +3,7 @@ package com.tuneit.salsa3.ast;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.tuneit.salsa3.ParserException;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdes;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesPlan;
 
@@ -44,6 +45,29 @@ public class ArrayLiteral extends ASTNode {
 	
 	public ArrayLiteral(List<ASTNode> elements) {
 		this.elements = elements;
+	}
+	
+	public ASTNode clone() throws CloneNotSupportedException {
+		ArrayLiteral clone = new ArrayLiteral();
+		
+		for(ASTNode node : elements) {						
+			if(node instanceof Element) {
+				Element el = (Element) node;
+				ASTNode keyClone = null;
+				
+				if(el.getKey() != null) {
+					keyClone = (ASTNode) el.getKey().clone();
+				}
+				
+				ASTNode valueClone = (ASTNode) el.getValue().clone();
+				
+				Element elClone = new Element(valueClone, keyClone);
+				
+				clone.addElement(elClone);
+			}
+		}
+		
+		return clone;
 	}
 	
 	public List<ASTNode> getElements() {

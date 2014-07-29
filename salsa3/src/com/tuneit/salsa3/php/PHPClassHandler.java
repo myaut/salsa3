@@ -107,8 +107,7 @@ public class PHPClassHandler extends PHPStatementHandler implements
 	}
 	
 	private PHPParserHandler handleFunctionDeclaration(PHPParserState state) throws ParserException {
-		Literal functionFlagsNode = (Literal) state.getNode("fn_flags_znode");
-		int functionFlags = Integer.valueOf(functionFlagsNode.getToken());
+		int functionFlags = state.getIntParam("fn_flags");
 		
 		PHPFunctionDeclaration phpFunctionDecl = new PHPFunctionDeclaration(this);
 		PHPParserHandler newHandler = phpFunctionDecl.handleState(state);
