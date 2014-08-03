@@ -7,6 +7,12 @@ xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/x
 		
 		<class>com.tuneit.salsa3.model.Repository</class>
 		<class>com.tuneit.salsa3.model.Source</class>
+		<class>com.tuneit.salsa3.model.SourceReference</class>
+		<class>com.tuneit.salsa3.model.SourceSnippet</class>
+		
+		<class>com.tuneit.salsa3.model.ClassDeclaration</class>
+		<class>com.tuneit.salsa3.model.ClassMember</class>
+		<class>com.tuneit.salsa3.model.SuperClassReference</class>
 		
 		<properties>
 			<property name="eclipselink.jdbc.password" value="salsa"/>
@@ -14,7 +20,7 @@ xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/x
 			<property name="eclipselink.jdbc.driver" value="com.mysql.jdbc.Driver"/>
 			<property name="eclipselink.jdbc.url" value="jdbc:mysql://localhost:3306/salsa"/>
 			
-			<!-- <property name="eclipselink.ddl-generation" value="drop-and-create-tables"/> -->
+			<!-- <property name="eclipselink.ddl-generation" value="drop-and-create-tables"/>  -->
 			<property name="eclipselink.ddl-generation" value="create-or-extend-tables"/>
 			
 			<property name="eclipselink.logging.logger" value="JavaLogger"/>

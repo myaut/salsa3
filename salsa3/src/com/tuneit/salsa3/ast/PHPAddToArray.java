@@ -9,6 +9,8 @@ public class PHPAddToArray extends ASTNode {
 	public PHPAddToArray(ASTNode array) {
 		super();
 		this.array = array;
+		
+		array.reuseInExpression(this);
 	}
 
 	public ASTNode getArray() {

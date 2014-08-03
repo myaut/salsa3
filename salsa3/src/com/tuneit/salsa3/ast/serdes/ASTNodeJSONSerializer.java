@@ -4,8 +4,17 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONArray;
 
+import com.tuneit.salsa3.ast.Literal;
+
 public class ASTNodeJSONSerializer implements ASTNodeSerializer {
-	public static String ASTTYPE_NAME = "_asttype";
+	public static String ASTTYPE_NAME = "_t";
+	
+	private boolean useShortNames;
+	
+	public ASTNodeJSONSerializer(boolean useShortNames) {
+		super();
+		this.useShortNames = useShortNames;
+	}
 	
 	@Override
 	public Object createNode(String className) throws ASTNodeSerdesException {
@@ -21,11 +30,12 @@ public class ASTNodeJSONSerializer implements ASTNodeSerializer {
 	}
 
 	@Override
-	public void addToNode(Object node, String param, Object value) throws ASTNodeSerdesException {
+	public void addToNode(Object node, String paramName, 
+			String paramShortName, Object value) throws ASTNodeSerdesException {
 		JSONObject jso = (JSONObject) node;
 
 		try {
-			jso.put(param, value);
+			jso.put(useShortNames ? paramShortName : paramName, value);
 		} catch (JSONException e) {
 			throw new ASTNodeSerdesException("JSON error!", e);
 		}
@@ -44,4 +54,17 @@ public class ASTNodeJSONSerializer implements ASTNodeSerializer {
 		array.put(value);
 	}
 
+	@Override
+	public Object serializeLiteral(Literal literal)
+			throws ASTNodeSerdesException {
+		StringBuilder sb = new StringBuilder();
+		
+		sb.append(literal.getType().toString());
+		sb.append('|');
+		sb.append(literal.getToken());
+		
+		return sb.toString();
+	}
+
 }
+

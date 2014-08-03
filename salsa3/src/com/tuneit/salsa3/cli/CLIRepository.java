@@ -2,9 +2,11 @@ package com.tuneit.salsa3.cli;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.shell.core.CommandMarker;
 import org.springframework.shell.core.annotation.CliCommand;
 import org.springframework.shell.core.annotation.CliOption;
+import org.springframework.shell.core.annotation.CliAvailabilityIndicator;
 import org.springframework.stereotype.Component;
 
 import com.tuneit.salsa3.RepositoryManager;
@@ -15,6 +17,14 @@ import com.tuneit.salsa3.model.Source;
 
 @Component
 public final class CLIRepository implements CommandMarker {
+	@Autowired
+	private CLIRepositoryHolder holder;
+	
+	@CliAvailabilityIndicator({"walk", "sources"})
+	public boolean isRepositorySelected() {
+		return holder.getRepository() != null;
+	}
+	
 	@CliCommand(value = "repo create", help = "Create a new SALSA3 repository") 
 	public String create(
 			@CliOption(key = {"name"}, mandatory = true, help = "Name of repository") 
@@ -53,28 +63,90 @@ public final class CLIRepository implements CommandMarker {
 		return tv.toString();
 	}
 	
-	@CliCommand(value = "repo walk", help = "Walk over repository and add sources") 
-	public String walk(
-		@CliOption(key = {"name"}, mandatory = true, help = "Name of repository") 
-			final String name) {
-		TaskManager tm = TaskManager.getInstance();
-		RepositoryManager rm = RepositoryManager.getInstance();
+	@CliCommand(value = "select", help = "Select repository or source. " 
+				+ "If called without options, deselects repository."
+				+ "If --repository do not have argument, deselects source")
+	public String select(
+			@CliOption(key = {"repository"}, mandatory = false, help = "Repository", 
+					specifiedDefaultValue = "__REPOSITORY__") 
+				final String name,
+			@CliOption(key = {"path"}, mandatory = false, help = "Path to the source") 
+				final String path,
+			@CliOption(key = {"id"}, mandatory = false, help = "ID of source file") 
+				final Integer id) {	
+		if(name == null && path == null && id == null) {
+			holder.setRepository(null);
+			holder.setSource(null);
+			return "";
+		}
 		
-		Repository repository = rm.getRepositoryByName(name);
+		RepositoryManager rm = RepositoryManager.getInstance();
+		Repository repository = holder.getRepository();
+		
+		if(name != null && name.equals("__REPOSITORY__")) {
+			if(repository == null) {
+				throw new IllegalArgumentException("Couldn't deselect source, when no repository is selected. " + 
+						"Add argument to --repository option");
+			}
+			else {
+				holder.setSource(null);
+				return "";
+			}
+		}
 		
 		if(repository == null) {
-			throw new IllegalArgumentException("No such repository '" + name + "'!");
+			if(name == null && (path != null || id != null)) { 
+				throw new IllegalArgumentException("Couldn't select source, when no repository is selected." + 
+							"Add --repository option");
+			}
+			else {
+				repository = rm.getRepositoryByName(name);
+				
+				if(repository == null) {
+					throw new IllegalArgumentException("Repository '" + name + "' is not found!");
+				}
+			}
 		}
+		
+		holder.setRepository(repository);
+		
+		Source source = null;
+		
+		if(path != null) {
+			source = rm.getSourceByPath(repository, path);
+			
+			if(source == null) {
+				throw new IllegalArgumentException("Source '" + path + "' is not found in repository '" + 
+								repository.getRepositoryName() + "'!");
+			}
+			
+		}
+		else if(id != null) {
+			source = rm.getSourceById(repository, id);
+			
+			if(source == null) {
+				throw new IllegalArgumentException("Source #" + id + " is not found in repository '" + 
+								repository.getRepositoryName() + "'!");
+			}
+		}
+		
+		holder.setSource(source);
+		
+		return "";
+	}
+	
+	@CliCommand(value = "walk", help = "Walk over repository and add sources") 
+	public String walk() {
+		TaskManager tm = TaskManager.getInstance();
+		Repository repository = holder.getRepository();
 		
 		tm.addTask(new RepositoryWalkTask(repository));
 		
-		return "Walking repository '" + name + "' is started.\nUse task list to monitor activity";
+		return "Walking repository '" + repository.getRepositoryName() + "' is started.\nUse task list to monitor activity";
 	}
 	
-	@CliCommand(value = "repo sources", help = "Show repository sources") 
+	@CliCommand(value = "sources", help = "Show repository sources") 
 	public String sources(
-			@CliOption(key = {"name"}, mandatory = true, help = "Name of repository") 
-				final String name,
 			@CliOption(key = {"parsed"}, mandatory = false, help = "Show only parsed sources",
 					specifiedDefaultValue = "true", unspecifiedDefaultValue = "false") 
 				final Boolean parsed,
@@ -92,11 +164,7 @@ public final class CLIRepository implements CommandMarker {
 		TableView tv = new TableView();
 		RepositoryManager rm = RepositoryManager.getInstance();
 		
-		Repository repository = rm.getRepositoryByName(name);
-		
-		if(repository == null) {
-			throw new IllegalArgumentException("No such repository '" + name + "'!");
-		}
+		Repository repository = holder.getRepository();
 		
 		tv.newRow()
 			.append("ID")
@@ -133,6 +201,11 @@ public final class CLIRepository implements CommandMarker {
 	public String delete(
 			@CliOption(key = {"name"}, mandatory = true, help = "Name of repository") 
 				final String name) {
+		if(holder.getRepository() != null 
+				&& holder.getRepository().getRepositoryName().equals(name)) {
+			holder.setRepository(null);
+		}
+		
 		RepositoryManager rm = RepositoryManager.getInstance();
 		
 		rm.deleteRepository(name);

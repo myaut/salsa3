@@ -11,6 +11,9 @@ public class DynamicInstanceMember extends ASTNode {
 		super();
 		this.instance = instance;
 		this.memberExpression = memberExpression;
+		
+		instance.reuseInExpression(this);
+		memberExpression.reuseInExpression(this);
 	}
 	
 	public ASTNode clone() {

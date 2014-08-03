@@ -9,6 +9,8 @@ public class Throw extends ASTNode {
 	public Throw(ASTNode object) {
 		super();
 		this.object = object;
+		
+		object.reuseInExpression(this);
 	}
 
 	public ASTNode getObject() {

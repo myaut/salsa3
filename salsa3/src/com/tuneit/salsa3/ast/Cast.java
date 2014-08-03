@@ -9,10 +9,7 @@ public class Cast extends ASTNode {
 	private String castType;
 	
 	public Cast(ASTNode type, ASTNode expression) {
-		super();
-		this.type = (TypeName) type;
-		this.expression = expression;
-		this.castType = null;
+		this(type, expression, null);
 	}
 	
 	public Cast(ASTNode type, ASTNode expression, String castType) {
@@ -20,6 +17,9 @@ public class Cast extends ASTNode {
 		this.type = (TypeName) type;
 		this.expression = expression;
 		this.castType = castType;
+		
+		type.reuseInExpression(this);
+		expression.reuseInExpression(this);
 	}
 	
 	public Cast clone() {

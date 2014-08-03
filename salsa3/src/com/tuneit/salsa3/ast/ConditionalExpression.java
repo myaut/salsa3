@@ -14,6 +14,10 @@ public class ConditionalExpression extends ASTNode {
 		this.condition = condition;
 		this.expressionTrue = expressionTrue;
 		this.expressionFalse = expressionFalse;
+		
+		condition.reuseInExpression(this);
+		expressionTrue.reuseInExpression(this);
+		expressionFalse.reuseInExpression(this);
 	}
 	
 	public ConditionalExpression(ASTNode condition) {

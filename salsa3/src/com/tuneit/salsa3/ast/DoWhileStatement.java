@@ -12,6 +12,8 @@ public class DoWhileStatement extends ASTStatement {
 	
 	public DoWhileStatement(ASTNode condition) {
 		this.condition = condition;
+		
+		condition.reuseInExpression(this);
 	}
 	
 	public ASTNode getCondition() {

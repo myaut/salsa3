@@ -8,6 +8,8 @@ public class TakeReference extends ASTNode {
 	
 	public TakeReference(ASTNode expression) {
 		this.expression = expression;
+		
+		expression.reuseInExpression(this);
 	}
 	
 	public ASTNode getExpression() {

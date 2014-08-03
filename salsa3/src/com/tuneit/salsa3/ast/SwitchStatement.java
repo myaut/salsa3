@@ -24,6 +24,8 @@ public class SwitchStatement extends ASTStatement {
 	public SwitchStatement(ASTNode expr) {
 		this.expr = expr;
 		this.cases = new ArrayList<Case>();
+		
+		expr.reuseInExpression(this);
 	}
 	
 	public void addCase(ASTNode pattern) {

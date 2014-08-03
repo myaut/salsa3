@@ -8,6 +8,8 @@ public class WhileStatement extends ASTStatement {
 	
 	public WhileStatement(ASTNode condition) {
 		this.condition = condition;
+		
+		condition.reuseInExpression(this);
 	}
 	
 	public ASTNode getCondition() {

@@ -9,21 +9,25 @@ public class ForeachStatement extends ASTStatement {
 	private ASTNode value;
 	
 	public ForeachStatement(ASTNode iterable) {
-		this.iterable = iterable;
-		this.key = null;
-		this.value = null;
+		this(iterable, null, null);
 	}
 	
 	public ForeachStatement(ASTNode iterable, ASTNode value) {
-		this.iterable = iterable;
-		this.key = null;
-		this.value = value;
+		this(iterable, value, null);
 	}
 	
 	public ForeachStatement(ASTNode iterable, ASTNode value, ASTNode key) {
 		this.iterable = iterable;
 		this.key = key;
 		this.value = value;
+		
+		iterable.reuseInExpression(this);		
+		if(value != null) {
+			value.reuseInExpression(this);
+		}
+		if(key != null) {
+			key.reuseInExpression(this);
+		}
 	}
 
 	public ASTNode getKey() {

@@ -11,6 +11,8 @@ public class InstanceMember extends ASTNode {
 		super();
 		this.instance = instance;
 		this.memberName = memberName;
+		
+		instance.reuseInExpression(this);
 	}
 	
 	public ASTNode clone() {

@@ -28,11 +28,12 @@ public class PHPFunctionDeclaration extends PHPStatementHandler {
 			Literal functionNameNode = (Literal) state.getNode("function_name");
 			String functionName = functionNameNode.getToken();
 			
-			fdecl = new FunctionDeclaration(functionName);	
-			
+			TypeName returnType = new TypeName("mixed");
 			if(returnReference == 1) {
-				fdecl.addReturnTypeDeclarator("&");
+				returnType.addTypeQualifier("&");
 			}
+			
+			fdecl = new FunctionDeclaration(functionName, returnType);				
 			
 			setRootNode(fdecl);
 			

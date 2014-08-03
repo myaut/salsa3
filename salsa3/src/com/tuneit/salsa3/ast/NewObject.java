@@ -11,6 +11,9 @@ public class NewObject extends ASTNode {
 		super();
 		this.className = className;
 		this.constructorCall = constructorCall;
+		
+		className.reuseInExpression(this);
+		constructorCall.reuseInExpression(this);
 	}
 
 	public ASTNode getClassName() {

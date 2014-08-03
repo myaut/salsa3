@@ -8,11 +8,15 @@ import com.tuneit.salsa3.ast.ASTNode;
 import com.tuneit.salsa3.ast.ASTStatement;
 
 public class ASTStatementJSONSerializer implements ASTStatementSerializer {
-	public static String AST_STMT_STATE = "_stmtstate";
-	public static String AST_STMT_NODE = "_stmtnode";
-	public static String AST_STMT_STMTS = "_stmts";
+	public static String AST_STMT_STATE = "_s";
+	public static String AST_STMT_NODE = "_n";
+	public static String AST_STMT_STMTS = "_l";
 	
-	private static ASTNodeSerializer nodeSerializer = new ASTNodeJSONSerializer();
+	private ASTNodeSerializer nodeSerializer; 
+	
+	public ASTStatementJSONSerializer(boolean useShortNames) {
+		nodeSerializer = new ASTNodeJSONSerializer(useShortNames);
+	}
 	
 	@Override
 	public Object createStatement(ASTNode node) throws ASTNodeSerdesException {

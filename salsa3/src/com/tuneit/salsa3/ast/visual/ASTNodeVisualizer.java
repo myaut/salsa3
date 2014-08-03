@@ -2,6 +2,7 @@ package com.tuneit.salsa3.ast.visual;
 
 import java.util.List;
 
+import com.tuneit.salsa3.ast.Literal;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesException;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerializer;
 
@@ -9,22 +10,20 @@ public class ASTNodeVisualizer implements ASTNodeSerializer {
 
 	@Override
 	public Object createNode(String className) throws ASTNodeSerdesException {
-		int beginIndex = className.lastIndexOf('.');
-		
-		return new VisualNode(className.substring(beginIndex + 1));
+		return new VisualNode(className);
 	}
 
 	@Override
-	public void addToNode(Object node, String param, Object value)
+	public void addToNode(Object node, String paramName, String paramShortName, Object value)
 			throws ASTNodeSerdesException {
 		VisualNode vn = (VisualNode) node;
 
 		if(value instanceof VisualNode) {
 			VisualNode vn2 = (VisualNode) value;
-			vn.addNodeToRight(param, vn2);
+			vn.addNodeToRight(paramName, vn2);
 		}
 		else {
-			vn.addParam(param, value.toString());
+			vn.addParam(paramName, value.toString());
 		}		
 	}
 
@@ -45,6 +44,16 @@ public class ASTNodeVisualizer implements ASTNodeSerializer {
 		else {
 			vn.addParam("", value.toString());
 		}
+	}
+
+	@Override
+	public Object serializeLiteral(Literal literal)
+			throws ASTNodeSerdesException {
+		VisualNode vn = new VisualNode(literal.getType().toString());
+		
+		vn.addParam("", literal.getToken());
+		
+		return vn;
 	}
 
 }

@@ -12,15 +12,19 @@ public class VariableDeclaration extends ASTNode {
 	private ASTNode defaultValue;
 	
 	public VariableDeclaration(ASTNode var, ASTNode typeName) {
-		this.variable = (Variable) var;
-		this.typeName = (TypeName) typeName;
-		this.defaultValue = null;
+		this(var, typeName, null);
 	}
 	
 	public VariableDeclaration(ASTNode var, ASTNode typeName, ASTNode defaultValue) {
 		this.variable = (Variable) var;
 		this.typeName = (TypeName) typeName;
 		this.defaultValue = defaultValue;
+		
+		var.reuseInExpression(this);
+		typeName.reuseInExpression(this);
+		if(defaultValue != null) {
+			defaultValue.reuseInExpression(this);
+		}
 	}
 
 	public Variable getVariable() {

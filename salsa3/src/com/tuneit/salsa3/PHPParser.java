@@ -12,8 +12,7 @@ import org.apache.commons.io.IOUtils;
 import org.json.JSONObject;
 import org.json.JSONException;
 
-import com.tuneit.salsa3.ast.ASTNode;
-import com.tuneit.salsa3.ast.ASTStatement;
+import com.tuneit.salsa3.ast.*;
 import com.tuneit.salsa3.php.*;
 
 public final class PHPParser implements SourceParser {
@@ -115,7 +114,7 @@ public final class PHPParser implements SourceParser {
 			ASTStatement root = (ASTStatement) handler.getRootNode();
 			root.filterReused();
 			
-			return root;	
+			return postProcessRoot(root);	
 		}
 		catch(InterruptedException ie) {
 			ParserException pe = new ParserException("Parser process was interrupted", ie);
@@ -133,5 +132,70 @@ public final class PHPParser implements SourceParser {
 			ParserException pe = new ParserException("Class cast exception for at " + line, cce);
 			throw pe;
 		}
-	}	
+	}
+	
+	private ASTStatement postProcessRoot(ASTStatement root) throws ParserException {
+		ASTStatement newRoot = new ASTStatement();
+		FunctionDeclaration module = new FunctionDeclaration("__module__", new TypeName("mixed"));
+		
+		for(ASTNode node : root.getChildren()) {
+			if(node instanceof ClassDeclaration 
+					|| node instanceof FunctionDeclaration 
+					|| node instanceof VariableDeclaration
+					|| node instanceof IncludeStatement) {
+				newRoot.addChild(node);
+				
+				continue;
+			}
+			else if(node instanceof FunctionCall) {
+				FunctionCall fcall = (FunctionCall) node;
+				ASTNode funcNode = fcall.getFunction();
+				
+				/* FIXME: Have to be Token */
+				if(funcNode instanceof Literal) {
+					String funcName = ((Literal) funcNode).getToken();
+					
+					if(funcName.equals("define")) {
+						try {
+							Literal constantNameNode = 
+									(Literal) fcall.getArguments().get(0).getArgument();
+							ASTNode constantValue = 
+									fcall.getArguments().get(1).getArgument();
+							
+							String constantName = constantNameNode.getToken();
+							
+							TypeName typeName = new TypeName("mixed");
+							typeName.addTypeQualifier("const");
+							
+							newRoot.addChild(new VariableDeclaration(new Variable(constantName), 
+									typeName, constantValue));
+						}
+						catch(Exception e) {
+							throw new ParserException("Invalid define arguments", e);
+						}
+						
+						continue;
+					}
+				}
+			}
+			else if(node instanceof Assign) {
+				Assign assign = (Assign) node;
+				ASTNode left = assign.getLeft();
+				
+				if(left instanceof Variable) {
+					Variable variable = (Variable) left;
+					newRoot.addChild(new VariableDeclaration(variable, 
+							new TypeName("mixed"), assign.getRight()));
+					
+					continue;
+				}
+			}
+			
+			module.addChild(node);
+		}
+		
+		newRoot.addChild(module);
+		
+		return newRoot;
+	}
 }

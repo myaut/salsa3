@@ -4,6 +4,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import com.tuneit.salsa3.ast.ASTStatement;
+import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesException;
 import com.tuneit.salsa3.model.Repository;
 import com.tuneit.salsa3.model.Source;
 
@@ -39,14 +40,21 @@ public class SourceParseTask extends Task {
 		
 		try {
 			root = parser.parse();
-		} catch (ParserException e) {
+		} catch (Exception e) {
 			rm.onSourceParsed(source, false, e);
 			
 			throw new TaskException(e);
 		}
 		
+		try {
+			(new SourcePostProcessor(source, root)).postProcessSource();
+		} catch (Exception e) {
+			rm.onSourceParsed(source, false, e);
+			
+			throw new TaskException(e);
+		}		
+
 		rm.onSourceParsed(source, true, null);
 		
-		/* TODO: postprocess root, mark  */
 	}
 }

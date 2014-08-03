@@ -9,6 +9,7 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.tuneit.salsa3.ast.ASTStatement;
@@ -41,14 +42,33 @@ public class ASTStatementUtils {
 		ImageIO.write(image, "png", outputfile);
 	}
 	
-	public static ASTStatement serdesStatement(ASTStatement root) throws ASTNodeSerdesException {
-		ASTStatementSerializer serializer = new ASTStatementJSONSerializer();
+	public static String serializeStatement(ASTStatement root, int indent, boolean useShortNames) throws ASTNodeSerdesException {
+		ASTStatementSerializer serializer = new ASTStatementJSONSerializer(useShortNames);
 
 		JSONObject jso = (JSONObject) root.serializeStatement(serializer);
+		
+		try {
+			return jso.toString(indent);
+		} catch (JSONException e) {
+			throw new ASTNodeSerdesException("JSON error", e);
+		}		
+	}
+	
+	public static String serializeStatement(ASTStatement root) throws ASTNodeSerdesException {
+		return serializeStatement(root, 0, true);
+	}
+	
+	public static ASTStatement deserializeStatement(String ast, boolean useShortNames) throws ASTNodeSerdesException {
+		try {
+			JSONObject jso = new JSONObject(ast);
+			
+			ASTStatement newRoot = ASTStatementSerdes.deserializeStatement(new ASTNodeJSONDeserializer(useShortNames),
+					new ASTStatementJSONDeserializer(), jso);
 
-		ASTStatement newRoot = ASTStatementSerdes.deserializeStatement(new ASTNodeJSONDeserializer(),
-												new ASTStatementJSONDeserializer(), jso);
-
-		return newRoot;		
+			return newRoot;	
+		}
+		catch(JSONException jse) {
+			throw new ASTNodeSerdesException("JSON error", jse);
+		}	
 	}
 }

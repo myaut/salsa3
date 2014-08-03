@@ -3,18 +3,25 @@ package com.tuneit.salsa3.ast.serdes;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.HashSet;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Set;
 
 import com.tuneit.salsa3.ast.ASTNode;
 
 public class ASTNodeSerdesPlan {
 	public abstract class Param {
-		public int index;
-		public String name;
-		public boolean optional;
-		public Object defaultValue;
+		private int index;
+		private String name;
+		private boolean optional;
+		private Object defaultValue;
+		
+		private String shortName;
+		
+		private String getterName;
+		private Method getter; 
 		
 		public Param(int index, String name, boolean optional) {
 			this.index = index;
@@ -23,20 +30,42 @@ public class ASTNodeSerdesPlan {
 			this.defaultValue = null;
 		}
 		
-		public String getGetterName() {
+		public void findGetter(Class<?> nodeClass) {
 			String firstLetter = name.substring(0, 1);
-			String restOfName = name.substring(1);
+			String restOfName = name.substring(1);			
+			getterName = "get" + firstLetter.toUpperCase() + restOfName;
 			
-			return "get" + firstLetter.toUpperCase() + restOfName;
+			try {
+				getter = nodeClass.getDeclaredMethod(getterName);
+			}
+			catch(NoSuchMethodException e) {
+				try {
+					getter = nodeClass.getSuperclass().getDeclaredMethod(getterName);
+				} catch (NoSuchMethodException e1) {
+					getter = null;
+				} catch (SecurityException e1) {
+					getter = null;
+				}
+			}
+		}
+		
+		public String getGetterName() {
+			return getterName;
+		}
+		
+		public Method getGetter() {
+			return getter;
 		}
 		
 		public void setDefaultValue(Object defaultValue) {
 			this.defaultValue = defaultValue;
 		}
 		
-		public boolean isOptionalAndDefault(Object o) {			
-			return this.optional && 
-					((this.defaultValue == null && o == null) ||
+		public boolean isOptionalAndDefault(Object o) {		
+			if(!isOptional())
+				return false;
+			
+			return ((this.defaultValue == null && o == null) ||
 					 (this.defaultValue != null && o != null && this.defaultValue.equals(o)));
 		}
 		
@@ -46,6 +75,34 @@ public class ASTNodeSerdesPlan {
 		
 		public Object deserialize(ASTNodeDeserializer deserializer, Object o) throws ASTNodeSerdesException {
 			return o;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		public String getShortName() {
+			return shortName;
+		}
+
+		public void setShortName(String shortName) {
+			this.shortName = shortName;
+		}
+
+		public int getIndex() {
+			return index;
+		}
+
+		public boolean isOptional() {
+			return optional;
+		}
+
+		public Object getDefaultValue() {
+			return defaultValue;
 		} 
 	}
 	
@@ -198,82 +255,90 @@ public class ASTNodeSerdesPlan {
 	}
 	
 	private Class<?> nodeClass;
+	private String nodeClassName;
 	private List<Param> params;
+	private Set<String> shortParamNames;
 	
 	public ASTNodeSerdesPlan(Class<?> nodeClass) {
 		this.nodeClass = nodeClass;
 		this.params = new ArrayList<Param>();
+		this.shortParamNames = new HashSet<String>();
+		
+		String className = nodeClass.getName();
+		int beginIndex = className.lastIndexOf('.');
+		nodeClassName = className.substring(beginIndex + 1);
+	}
+	
+
+	public String getClassName() {
+		return nodeClassName;
 	}
 	
 	public Param addStringParam(int index, String name, boolean optional) {
-		Param param = new StringParam(index, name, optional);
-		params.add(param);
-		
-		return param;
+		return addParam(new StringParam(index, name, optional));
 	}
 	
 	public Param addIntegerParam(int index, String name, boolean optional) {
-		Param param = new IntegerParam(index, name, optional);
-		params.add(param);
-		
-		return param;
+		return addParam(new IntegerParam(index, name, optional));
 	}
 	
 	public Param addBooleanParam(int index, String name, boolean optional) {
-		Param param = new IntegerParam(index, name, optional);
-		params.add(param);
-		
-		return param;
+		return addParam(new IntegerParam(index, name, optional));
 	}
 	
 	public Param addStringListParam(int index, String name, boolean optional) {
-		Param param = new StringListParam(index, name, optional);
-		params.add(param);
-		
-		return param;
+		return addParam(new StringListParam(index, name, optional));
 	}
 	
 	public <T extends Enum<T>> Param addEnumParam(int index, String name, boolean optional, Class<T> enumClass) {
-		Param param = new EnumParam<T>(index, name, optional, enumClass);
-		params.add(param);
-		
-		return param;
+		return addParam(new EnumParam<T>(index, name, optional, enumClass));
 	}
 	
 	public Param addNodeParam(int index, String name, boolean optional) {
-		Param param = new NodeParam(index, name, optional);
-		params.add(param);
-		
-		return param;
+		return addParam(new NodeParam(index, name, optional));
 	}
 	
 	public Param addNodeListParam(int index, String name, boolean optional) {
-		Param param = new NodeListParam(index, name, optional);
-		params.add(param);
-		
-		return param;
+		return addParam(new NodeListParam(index, name, optional));
 	}
 	
 	public <T extends Enum<T>> Param addEnumListParam(int index, String name, boolean optional, Class<T> enumClass) {
-		Param param = new EnumListParam<T>(index, name, optional, enumClass);
+		return addParam(new EnumListParam<T>(index, name, optional, enumClass));
+	}
+	
+	private Param addParam(Param param) {
+		String longName = param.getName();
+		String baseShortName = longName.substring(0, 1) + longName.substring(1).replaceAll("[a-z]", "");
+		String shortName = baseShortName;
+		int counter = 1;
+		
+		while(shortParamNames.contains(shortName)) {
+			++counter;
+			shortName = baseShortName + counter;
+		}
+		
+		shortParamNames.add(shortName);
+		param.setShortName(shortName);
+		
 		params.add(param);
+		param.findGetter(nodeClass);
 		
 		return param;
 	}
 	
 	public Object serializeNode(ASTNodeSerializer serializer, Object node) throws ASTNodeSerdesException {
-		Object serializedNode = serializer.createNode(nodeClass.getName());
+		Object serializedNode = serializer.createNode(nodeClassName);
 		
 		for(Param param : params) {
 			String getterName = param.getGetterName();
-			Method getter;
-			try {
-				try {
-					getter = nodeClass.getDeclaredMethod(getterName);
-				}
-				catch(NoSuchMethodException e) {
-					getter = nodeClass.getSuperclass().getDeclaredMethod(getterName);
-				}
+			Method getter = param.getGetter();
+			
+			if(getter == null) {
+				throw new ASTNodeSerdesException("Getter " + getterName + 
+						" is missing in class" + nodeClassName);
+			}
+			
+			try {				
 				Object o = getter.invoke(node);
 				
 				if(param.isOptionalAndDefault(o)) {
@@ -282,28 +347,25 @@ public class ASTNodeSerdesPlan {
 				
 				if(o == null) {
 					throw new ASTNodeSerdesException("Getter " + getterName + 
-							" returned null for class" + nodeClass.getName());
+							" returned null for class" + nodeClassName);
 				}
 				
-				serializer.addToNode(serializedNode, param.name, param.serialize(serializer, o));
-			} catch (NoSuchMethodException e) {
-				throw new ASTNodeSerdesException("Getter " + getterName + 
-								" is missing in class" + nodeClass.getName(), e);
+				serializer.addToNode(serializedNode, param.getName(), param.getShortName(), param.serialize(serializer, o));
 			} catch (SecurityException e) {
 				throw new ASTNodeSerdesException("Security exception for getter" + getterName + 
-								" from class" + nodeClass.getName(), e);
+								" from class" + nodeClassName, e);
 			} catch (IllegalAccessException e) {
 				throw new ASTNodeSerdesException("Getter " + getterName + 
-								"has invalid rights in class" + nodeClass.getName(), e);
+								"has invalid rights in class" + nodeClassName, e);
 			} catch (IllegalArgumentException e) {
 				throw new ASTNodeSerdesException("Getter " + getterName + 
-								"got invalid argument in class" + nodeClass.getName(), e);
+								"got invalid argument in class" + nodeClassName, e);
 			} catch (InvocationTargetException e) {
 				throw new ASTNodeSerdesException("Getter " + getterName + 
-								"invokation error in class" + nodeClass.getName(), e);
+								"invokation error in class" + nodeClassName, e);
 			} catch (ClassCastException e) {
 				throw new ASTNodeSerdesException("Unexpected class of parameter for class" + 
-								nodeClass.getName(), e);
+						nodeClassName, e);
 			}
 		}
 		
@@ -317,26 +379,24 @@ public class ASTNodeSerdesPlan {
 		int index = -1;
 		
 		for(Param param : params) {
-			Object value = deserializer.getNodeParam(o, param.name);
+			Object value = deserializer.getNodeParam(o, param.getName(), param.getShortName());
 			
 			if(value == null) {
-				if(!param.optional) {
-					throw new ASTNodeSerdesException("Required parameter '" + param.name + 
+				if(!param.isOptional()) {
+					throw new ASTNodeSerdesException("Required parameter '" + param.getName() + 
 											"' is missing  for class " + nodeClass.getName());
 				}
 				
 				continue;
 			}
 			
-			// System.out.println(param.name + " " + index + " " + param.index);
-			
-			if(index == param.index) {
-				throw new ASTNodeSerdesException("Duplicate parameter '" + param.name + 
+			if(index == param.getIndex()) {
+				throw new ASTNodeSerdesException("Duplicate parameter '" + param.getName() + 
 									"' at position " + Integer.toString(index) + 
 									" for class " + nodeClass.getName());
 			}
 			
-			index = param.index;			
+			index = param.getIndex();			
 			value = param.deserialize(deserializer, value);
 			
 			paramValues.add(value);

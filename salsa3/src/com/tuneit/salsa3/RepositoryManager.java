@@ -85,20 +85,28 @@ public final class RepositoryManager {
 		em.getTransaction().commit();
 	}
 	
-	public void deleteRepository(String repoName) {		
+	public void deleteRepository(String repoName) {	
 		CriteriaBuilder cb = this.em.getCriteriaBuilder();
-		Repository repo = getRepositoryByName(repoName);
+		Repository repository = getRepositoryByName(repoName);
+		SourceManager sm = SourceManager.getInstance();
 		
 		CriteriaDelete<Source> deleteSourcesCriteria = cb.createCriteriaDelete(Source.class);
-		Root<Source> e = deleteSourcesCriteria.from(Source.class);
-		deleteSourcesCriteria.where(cb.equal(e.get("repository"), repo));
+		Root<Source> root = deleteSourcesCriteria.from(Source.class);
+		deleteSourcesCriteria.where(cb.equal(root.get("repository"), repository));
 		Query deleteSourcesQuery = em.createQuery(deleteSourcesCriteria);
 		
 		em.getTransaction().begin();
 		
-		deleteSourcesQuery.executeUpdate();
+		try {
+			sm.deleteAllObjects(repository, em);
+			deleteSourcesQuery.executeUpdate();
+			em.remove(repository);
+		}
+		catch(Exception e) {
+			em.getTransaction().rollback();
+			throw e;
+		}
 		
-		em.remove(repo);
 		em.getTransaction().commit();
 	}
 	
@@ -119,7 +127,6 @@ public final class RepositoryManager {
 		return (Source) query.getSingleResult();
 	}
 	
-	@SuppressWarnings("unchecked")
 	public Source getSourceByPath(Repository repository, String path) {
 		Query query = em.createQuery("SELECT s FROM Source s WHERE s.repository = :repository AND s.path = :path");
 		query.setParameter("repository", repository);

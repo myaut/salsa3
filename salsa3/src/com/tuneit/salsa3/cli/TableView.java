@@ -91,9 +91,10 @@ public class TableView {
 						break;
 					}
 					
-					for(int j = 0; j < maxStringLength[i]; ++j) {
+					for(int j = 0; j < maxStringLength[i] - 1; ++j) {
 						sb.append('-');
 					}
+					sb.append(' ');
 				}
 				
 				isHeaderRow = false;
