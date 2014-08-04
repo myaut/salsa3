@@ -5,10 +5,16 @@ import java.io.PrintStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Persistence;
+
 import static jline.internal.Log.Level.*;
 
 public final class SalsaCLI {
-	private static class JlineLoggerOutputStream extends PrintStream {
+	private static final String PERSISTENCE_UNIT_NAME = "salsaPU";
+	
+	private static class JlineLoggerOutputStream extends PrintStream {	
 		private static Logger log = Logger.getLogger("jline.internal.Log");
 		
 		private Level level;
@@ -91,8 +97,19 @@ public final class SalsaCLI {
 	
 	public static void main(String[] args) {
 		try {
+			/* Override Jline logging */
 			jline.internal.Log.setOutput(new JlineLoggerOutputStream());
 			
+			/* Connect to database in background */
+			(new Thread() {
+				@Override
+				public void run() {
+					EntityManagerFactory emf = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME);
+					EntityManager em = emf.createEntityManager();
+				}
+			}).start();
+			
+			/* Finally, start Spring Shell! */
 			org.springframework.shell.Bootstrap.main(args);
 		} catch (IOException e) {
 			e.printStackTrace();
