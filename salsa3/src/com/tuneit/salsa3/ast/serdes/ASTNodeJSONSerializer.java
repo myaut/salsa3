@@ -54,17 +54,5 @@ public class ASTNodeJSONSerializer implements ASTNodeSerializer {
 		array.put(value);
 	}
 
-	@Override
-	public Object serializeLiteral(Literal literal)
-			throws ASTNodeSerdesException {
-		StringBuilder sb = new StringBuilder();
-		
-		sb.append(literal.getType().toString());
-		sb.append('|');
-		sb.append(literal.getToken());
-		
-		return sb.toString();
-	}
-
 }
 

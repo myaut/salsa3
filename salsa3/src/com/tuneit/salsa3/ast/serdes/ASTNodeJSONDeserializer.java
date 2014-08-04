@@ -79,24 +79,5 @@ public class ASTNodeJSONDeserializer implements ASTNodeDeserializer {
 		
 		return new JSONNodeIterator((JSONArray) o);
 	}
-
-	@Override
-	public boolean isLiteral(Object o) throws ASTNodeSerdesException {
-		return o instanceof String;
-	}
-
-	@Override
-	public Literal deserializeLiteral(Object o) throws ASTNodeSerdesException {
-		String literal = (String) o;	
-		String[] pair = literal.split("\\|", 2);
-		
-		try {
-			Literal.Type type = Enum.valueOf(Literal.Type.class, pair[0]);
-			return new Literal(type, pair[1]);
-		}
-		catch(Exception e) {
-			throw new ASTNodeSerdesException("Failed to parse literal '" + literal + "'!", e);
-		}
-	}
 }
 

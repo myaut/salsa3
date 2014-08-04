@@ -9,6 +9,7 @@ import java.util.logging.Logger;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+import javax.persistence.NoResultException;
 import javax.persistence.Persistence;
 import javax.persistence.Query;
 import javax.persistence.criteria.Join;
@@ -22,6 +23,16 @@ import com.tuneit.salsa3.model.*;
 
 import static com.tuneit.salsa3.ast.ClassDeclaration.*;
 
+/**
+ * <strong>Source manager </strong> - main class for managing source objects 
+ * They are stored by <tt>SourcePostProcessor</tt>, then may be fetched using SourceManager class
+ * Singleton - use <tt>SourceManager.getInstance()</tt> to get an instance
+ * 
+ * This class is non-safe in multithreading
+ * 
+ * @author Sergey Klyaus [Sergey.Klyaus@Tune-IT.Ru]
+ *
+ */
 public class SourceManager {
 	private static final String PERSISTENCE_UNIT_NAME = "salsaPU";
 	private static SourceManager _instance = null;
@@ -30,7 +41,7 @@ public class SourceManager {
 	
 	private EntityManager em;
 		
-	public SourceManager() {
+	private SourceManager() {
 		EntityManagerFactory emf = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME);
 		
 		em = emf.createEntityManager();
@@ -196,6 +207,19 @@ public class SourceManager {
 		}
 	}
 	
+	/**
+	 * Find all class declarations related to a repository or a source with various criteria
+	 * 
+	 * @throws NullPointerException if both repository and source are null
+	 * 
+	 * @param repository Repository to be searched
+	 * @param source Particular source from repository. If set to null, all sources from a repository will be searched
+	 * @param classNameMask Mask for class name. May contain asterisks (*) for class name globbing
+	 * @param superClassName Precise same of superclass
+	 * @param classTypeFilter Array of class types, i.e. for filtering interfaces
+	 * 
+	 * @return List of found class declarations
+	 */
 	@SuppressWarnings("unchecked")
 	public List<ClassDeclaration> findClasses(Repository repository, Source source, 
 			String classNameMask, String superClassName, Type[] classTypeFilter) {
@@ -226,6 +250,16 @@ public class SourceManager {
 		return (List<ClassDeclaration>) query.getResultList();
 	}
 	
+	/**
+	 * Finds a class
+	 * 
+	 * @throws SourceException if class was not found 
+	 * 
+	 * @param repository
+	 * @param source
+	 * @param name Precise name of classes
+	 * @return
+	 */
 	public ClassDeclaration getClassByName(Repository repository, Source source, String name) {
 		SelectClassQuery classSelector = new SelectClassQuery();	
 		classSelector.start();
@@ -236,9 +270,19 @@ public class SourceManager {
 		classSelector.setParameter("className", name);
 		
 		Query query = classSelector.createQuery(em);		
-		return (ClassDeclaration) query.getSingleResult();
+		
+		try {
+			return (ClassDeclaration) query.getSingleResult();
+		}
+		catch(NoResultException nre) {
+			throw new SourceException("Class '" + name + "' was not found!", nre);
+		}
 	}
 	
+	/**
+	 * @param klass
+	 * @return List of class members that are belong to class
+	 */
 	@SuppressWarnings("unchecked")
 	public List<ClassMember> getClassMembers(ClassDeclaration klass) {
 		Query query = em.createQuery("SELECT cm FROM ClassMember cm WHERE cm.klass = :klass");
@@ -247,6 +291,16 @@ public class SourceManager {
 		return (List<ClassMember>) query.getResultList();
 	}
 	
+	/**
+	 * Finds subclasses of a class. Order of repository parsing is undefined, 
+	 * subclasses may be added earlier than super classes, so they are not linked at the moment of
+	 * parsing. Because of that, we couln't use <tt>ClassDeclaration</tt> as a criteria.
+	 * 
+	 * @param repository
+	 * @param source 
+	 * @param name
+	 * @return
+	 */
 	@SuppressWarnings("unchecked")
 	public List<SubClassReference> getSubClasses(Repository repository, Source source, String name) {
 		SelectClassQuery classSelector = new SelectClassQuery();	
@@ -264,6 +318,16 @@ public class SourceManager {
 		return (List<SubClassReference>) query.getResultList();
 	}
 	
+	/**
+	 * Finds all source snippets that belong to repository or single source in it
+	 * 
+	 * @param repository
+	 * @param source
+	 * @param showClassMembers set to true if class member snippets should also be selected
+	 * @param nameMask Mask for snippet name (i.e. variable, function name). Accepts asterisks (*) for globbing
+	 * @param snippetTypeFilter Filter of snippet type (i.e. show only functions)
+	 * @return
+	 */
 	@SuppressWarnings("unchecked")
 	public List<SourceSnippet> getSourceSnippets(Repository repository, Source source, boolean showClassMembers,
 					String nameMask, SourceSnippet.Type[] snippetTypeFilter) {
@@ -302,69 +366,50 @@ public class SourceManager {
 		return (SourceSnippet) query.getSingleResult();
 	}
 	
-	public void deleteAllObjectsJPQL(Repository repository, EntityManager em) {
-		SelectClassQuery classMemberDeleter = new SelectClassQuery();
-		classMemberDeleter.start("DELETE FROM ClassMember cm");
-		classMemberDeleter.join("LEFT JOIN cm.klass c");
-		classMemberDeleter.addClassSourceJoins(repository, null);
+	/**
+	 * Deletes all source objects. Do not call this function directly - use <tt>RepositoryManager</tt> instead. 
+	 * 
+	 * @param repository
+	 * @param source
+	 * @param em
+	 * 
+	 * @see RepositoryManager
+	 */
+	public void deleteAllObjects(Repository repository, Source source, EntityManager em) {
+		String lastPathString = null;
+		Object criteriaObject = null;
 		
-		SelectClassQuery superClassDeleter = new SelectClassQuery();
-		superClassDeleter.start("DELETE FROM SuperClassReference sr");
-		superClassDeleter.join("LEFT JOIN ClassDeclaration c ON sr IN c.superClasses");
-		superClassDeleter.addClassSourceJoins(repository, null);
+		if(source == null) {
+			criteriaObject = repository;
+			lastPathString = "repository";
+		}
+		else {
+			criteriaObject = source;
+		}
 		
-		SelectClassQuery classDeleter = new SelectClassQuery();
-		classDeleter.start("DELETE FROM ClassDeclaration c");
-		classDeleter.addClassSourceJoins(repository, null);
-		
-		SelectSnippetQuery snippetDeleter = new SelectSnippetQuery();
-		snippetDeleter.start("DELETE FROM SourceSnippet ss");
-		snippetDeleter.addClassSourceJoins(repository, null);
-		
-		SelectSourceReferenceQuery sourceReferenceDeleter = new SelectSourceReferenceQuery();
-		sourceReferenceDeleter.start("DELETE FROM SourceReference sr");
-		sourceReferenceDeleter.addClassSourceJoins(repository, null);
-		
-		Query classMemberDeleteQuery = classMemberDeleter.createQuery(em);
-		classMemberDeleteQuery.executeUpdate();
-		
-		Query superClassDeleteQuery = superClassDeleter.createQuery(em);
-		superClassDeleteQuery.executeUpdate();
-		
-		Query classDeleteQuery = classDeleter.createQuery(em);
-		classDeleteQuery.executeUpdate();
-		
-		Query snippetDeleteQuery = snippetDeleter.createQuery(em);
-		snippetDeleteQuery.executeUpdate();
-		
-		Query sourceReferenceDeleteQuery = sourceReferenceDeleter.createQuery(em);
-		sourceReferenceDeleteQuery.executeUpdate();
-	}
-	
-	public void deleteAllObjects(Repository repository, EntityManager em) {
 		Query classMemberDeleteQuery = createDeleteQuery(em, ClassMember.class, 
-				repository, "code", "sourceReference", "source", "repository");
+				criteriaObject, "code", "sourceReference", "source", lastPathString);
 		classMemberDeleteQuery.executeUpdate();
 		
 		Query superClassDeleteQuery = createDeleteQuery(em, SuperClassReference.class, 
-				repository, "classDeclaration", "sourceReference", "source", "repository");
+				criteriaObject, "classDeclaration", "sourceReference", "source", lastPathString);
 		superClassDeleteQuery.executeUpdate();		
 		
 		Query classDeleteQuery = createDeleteQuery(em, ClassDeclaration.class, 
-				repository, "sourceReference", "source", "repository");
+				criteriaObject, "sourceReference", "source", lastPathString);
 		classDeleteQuery.executeUpdate();
 		
 		Query snippetDeleteQuery = createDeleteQuery(em, SourceSnippet.class, 
-				repository, "sourceReference", "source", "repository");
+				criteriaObject, "sourceReference", "source", lastPathString);
 		snippetDeleteQuery.executeUpdate();
 		
 		Query sourceReferenceDeleteQuery = createDeleteQuery(em, SourceReference.class, 
-				repository, "source", "repository");
+				criteriaObject, "source", lastPathString);
 		sourceReferenceDeleteQuery.executeUpdate();
 	}
 	
 	@SuppressWarnings("rawtypes")
-	private <E> Query createDeleteQuery(EntityManager em, Class<E> klass, Repository repository, 
+	private <E> Query createDeleteQuery(EntityManager em, Class<E> klass, Object criteriaObject, 
 			String... attributes) {
 		CriteriaBuilder cb = this.em.getCriteriaBuilder();
 		CriteriaDelete<E> criteria = cb.createCriteriaDelete(klass);
@@ -372,11 +417,14 @@ public class SourceManager {
 		Path path = criteria.from(klass);
 		
 		for(String attribute : attributes) {
+			if(attribute == null) {
+				continue;
+			}
+			
 			path = path.get(attribute);
 		}
 		
-		Predicate predicate = cb.equal(path, repository);
-				
+		Predicate predicate = cb.equal(path, criteriaObject);				
 		criteria.where(predicate);
 		
 		Query query = em.createQuery(criteria);

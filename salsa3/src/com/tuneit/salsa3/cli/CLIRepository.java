@@ -1,5 +1,6 @@
 package com.tuneit.salsa3.cli;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +21,7 @@ public final class CLIRepository implements CommandMarker {
 	@Autowired
 	private CLIRepositoryHolder holder;
 	
-	@CliAvailabilityIndicator({"walk", "sources"})
+	@CliAvailabilityIndicator({"walk", "sources", "reset"})
 	public boolean isRepositorySelected() {
 		return holder.getRepository() != null;
 	}
@@ -143,6 +144,38 @@ public final class CLIRepository implements CommandMarker {
 		tm.addTask(new RepositoryWalkTask(repository));
 		
 		return "Walking repository '" + repository.getRepositoryName() + "' is started.\nUse task list to monitor activity";
+	}
+	
+	@CliCommand(value = "reset", help = "Reset source or repository to non-parsed state")
+	public String reset() {
+		RepositoryManager rm = RepositoryManager.getInstance();
+		StringBuilder sb = new StringBuilder();
+		
+		Repository repository = holder.getRepository();
+		Source singleSource = holder.getSource();
+		List<Source> sources;
+		
+		if(singleSource == null) {
+			sources = rm.getSources(repository);
+		}
+		else {
+			sources = new ArrayList<Source>();
+			sources.add(singleSource);
+		}
+		
+		sb.append("Resetting sources: ");
+		
+		for(Source source : sources) {
+			if(source.isParsed()) {
+				sb.append(source.getPath());
+				sb.append(", ");
+				
+				/* TODO: Do this exception-safe */
+				rm.resetSource(source);
+			}
+		}
+		
+		return sb.toString();
 	}
 	
 	@CliCommand(value = "sources", help = "Show repository sources") 

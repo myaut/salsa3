@@ -27,10 +27,6 @@ public class ASTNodeSerdes {
 	}
 	
 	public static Object serializeNode(ASTNodeSerializer serializer, Object o) throws ASTNodeSerdesException {
-		if(o instanceof Literal) {
-			return serializer.serializeLiteral((Literal) o);
-		}
-				
 		ASTNodeSerdesPlan plan = classHashMap.get(o.getClass());
 		
 		if(plan == null) {
@@ -41,10 +37,6 @@ public class ASTNodeSerdes {
 	}
 	
 	public static ASTNode deserializeNode(ASTNodeDeserializer deserializer, Object o) throws ASTNodeSerdesException {
-		if(deserializer.isLiteral(o)) {
-			return deserializer.deserializeLiteral(o);
-		}
-		
 		String className = deserializer.getNodeClassName(o);
 		ASTNodeSerdesPlan plan = planHashMap.get(className);
 		

@@ -38,6 +38,7 @@ public class SourceParseTask extends Task {
 					repository.getLanguage().toString() + "!");
 		}
 		
+		/* Generate AST with parser */
 		try {
 			root = parser.parse();
 		} catch (Exception e) {
@@ -46,6 +47,7 @@ public class SourceParseTask extends Task {
 			throw new TaskException(e);
 		}
 		
+		/* Generate source objects and put them to database */
 		try {
 			(new SourcePostProcessor(source, root)).postProcessSource();
 		} catch (Exception e) {

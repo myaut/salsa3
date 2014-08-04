@@ -45,15 +45,4 @@ public class ASTNodeVisualizer implements ASTNodeSerializer {
 			vn.addParam("", value.toString());
 		}
 	}
-
-	@Override
-	public Object serializeLiteral(Literal literal)
-			throws ASTNodeSerdesException {
-		VisualNode vn = new VisualNode(literal.getType().toString());
-		
-		vn.addParam("", literal.getToken());
-		
-		return vn;
-	}
-
 }

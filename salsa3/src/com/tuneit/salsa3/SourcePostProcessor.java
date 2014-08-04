@@ -12,6 +12,18 @@ import com.tuneit.salsa3.ast.VariableDeclaration;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesException;
 import com.tuneit.salsa3.model.*;
 
+/**
+ * SourcePostProcessor - a class for splitting source's AST into <em>source objects</em>:
+ * <ul>
+ * 		<li> Class declarations including super classes
+ * 		<li> Source snippets such as functions, global variables and directives
+ * </ul>
+ *  
+ * Generates object description and stores them to database
+ *
+ * @author Sergey Klyaus [Sergey.Klyaus@Tune-IT.Ru]
+ *
+ */
 public class SourcePostProcessor {
 	private static final String PERSISTENCE_UNIT_NAME = "salsaPU";
 	
