@@ -84,14 +84,21 @@ public final class CLIRepository implements CommandMarker {
 		RepositoryManager rm = RepositoryManager.getInstance();
 		Repository repository = holder.getRepository();
 		
-		if(name != null && name.equals("__REPOSITORY__")) {
-			if(repository == null) {
-				throw new IllegalArgumentException("Couldn't deselect source, when no repository is selected. " + 
-						"Add argument to --repository option");
+		boolean doChangeRepository = false;
+		
+		if(name != null) {
+			if(name.equals("__REPOSITORY__")) {
+				if(repository == null) {
+					throw new IllegalArgumentException("Couldn't deselect source, when no repository is selected. " + 
+							"Add argument to --repository option");
+				}
+				else {
+					holder.setSource(null);
+					return "";
+				}
 			}
 			else {
-				holder.setSource(null);
-				return "";
+				doChangeRepository = true;
 			}
 		}
 		
@@ -101,15 +108,19 @@ public final class CLIRepository implements CommandMarker {
 							"Add --repository option");
 			}
 			else {
-				repository = rm.getRepositoryByName(name);
-				
-				if(repository == null) {
-					throw new IllegalArgumentException("Repository '" + name + "' is not found!");
-				}
+				doChangeRepository = true;				
 			}
 		}
 		
-		holder.setRepository(repository);
+		if(doChangeRepository) {
+			repository = rm.getRepositoryByName(name);
+			
+			if(repository == null) {
+				throw new IllegalArgumentException("Repository '" + name + "' is not found!");
+			}
+			
+			holder.setRepository(repository);
+		}
 		
 		Source source = null;
 		
