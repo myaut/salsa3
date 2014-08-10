@@ -25,6 +25,20 @@ int token_debug;
  * it while printing. */
 #define IS_REALLY_ESCAPED() 	(is_escaped && str > begin && str[-1] == '\\')
 
+#define IS_JSON_ESCAPE_SEQ()		is_escaped &&		\
+									(*(str+1) == 'n' || \
+									 *(str+1) == 'f' || \
+									 *(str+1) == 't' || \
+									 *(str+1) == 'r' || \
+									 *(str+1) == 'b' || \
+									 *(str+1) == '"' )
+
+#define ESCAPE(c, s)				\
+	case c:							\
+			fputs(s, stdout);		\
+			break;
+
+
 static void escaped_print_string(const char* str, int is_escaped) {
 	const char* begin = str;
 
@@ -37,20 +51,15 @@ static void escaped_print_string(const char* str, int is_escaped) {
 		    fputs((IS_REALLY_ESCAPED()) ? "\'" : "\\\'", stdout);
 		    break;
 		  case '\\':
-		    fputs((is_escaped) ? "\\" : "\\\\", stdout);
+		    fputs((IS_JSON_ESCAPE_SEQ()) ? "\\" : "\\\\", stdout);
 			break;
-		  case '\a':
-		    fputs("\\a", stdout);
-		    break;
-		  case '\b':
-			fputs("\\b", stdout);
-		    break;
-		  case '\n':
-			fputs("\\n", stdout);
-		    break;
-		  case '\t':
-			fputs("\\t", stdout);
-		    break;
+
+		  ESCAPE('\r', "\\r")
+		  ESCAPE('\f', "\\f")
+		  ESCAPE('\n', "\\n")
+		  ESCAPE('\t', "\\t")
+		  ESCAPE('\b', "\\b")
+
 		  default:
 		    fputc(*str, stdout);
 		}
@@ -59,6 +68,8 @@ static void escaped_print_string(const char* str, int is_escaped) {
 	}
 }
 
+#undef IS_JSON_ESCAPE_SEQUENCE
+#undef ESCAPE
 #undef IS_REALLY_ESCAPED
 
 static void salsa3_begin(const char* state) {
@@ -484,7 +495,8 @@ int zend_do_verify_access_types(const znode *current_access_type, const znode *n
 
 void zend_do_begin_function_declaration(znode *function_token, znode *function_name, int is_method, int return_reference, znode *fn_flags_znode TSRMLS_DC) /* {{{ */
 {
-	int fn_flags = Z_LVAL(fn_flags_znode->u.constant);
+	int fn_flags =
+		(fn_flags_znode != NULL)? Z_LVAL(fn_flags_znode->u.constant) : 0;
 
 	salsa3_begin("begin_function_declaration");
 	salsa3_dump_int_param(is_method);

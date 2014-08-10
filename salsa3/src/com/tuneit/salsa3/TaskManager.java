@@ -14,8 +14,6 @@ import java.util.logging.Logger;
 
 public class TaskManager {
 	private static class ExceptionCatchingThreadFactory implements ThreadFactory {
-		private static Logger log = Logger.getLogger(TaskExecutor.class.getName());	
-		
 	    private final ThreadFactory delegate;
 
 	    private ExceptionCatchingThreadFactory(ThreadFactory delegate) {
@@ -134,6 +132,13 @@ public class TaskManager {
 	private static int MAXIMUM_POOL_SIZE = 4;
 	private static long KEEP_ALIVE_TIME = 100;
 	private static TimeUnit TIME_UNIT = TimeUnit.MILLISECONDS;
+	
+	static {
+		int numberOfCores = Runtime.getRuntime().availableProcessors();
+		
+		CORE_POOL_SIZE = numberOfCores;
+		MAXIMUM_POOL_SIZE = numberOfCores * 2;
+	}
 	
 	public TaskManager() {
 		this.queue = new LinkedBlockingQueue<Runnable>();

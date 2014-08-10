@@ -2,6 +2,8 @@ package com.tuneit.salsa3;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import com.tuneit.salsa3.ast.ASTStatement;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesException;
@@ -12,6 +14,8 @@ import static com.tuneit.salsa3.model.Repository.Language.*;
 
 public class SourceParseTask extends Task {
 	private Source source;
+	
+	private static Logger log = Logger.getLogger(SourceParseTask.class.getName());		
 	
 	public SourceParseTask(Source source) {
 		this.source = source;
@@ -44,6 +48,9 @@ public class SourceParseTask extends Task {
 		} catch (Exception e) {
 			rm.onSourceParsed(source, false, e);
 			
+			log.log(Level.WARNING, "Source '" + 
+						        source.getPath() + "' parsing is failed", e);
+			
 			throw new TaskException(e);
 		}
 		
@@ -52,6 +59,9 @@ public class SourceParseTask extends Task {
 			(new SourcePostProcessor(source, root)).postProcessSource();
 		} catch (Exception e) {
 			rm.onSourceParsed(source, false, e);
+			
+			log.log(Level.WARNING, "Post-processing of source '" + 
+						source.getPath() + "' is failed", e);
 			
 			throw new TaskException(e);
 		}		

@@ -20,6 +20,10 @@ public class StaticClassMember extends ASTNode {
 		this.classNames = classNames;
 	}
 	
+	public ASTNode clone() {
+		return new StaticClassMember(member, classNames);
+	}
+	
 	public String getMember() {
 		return member;
 	}
