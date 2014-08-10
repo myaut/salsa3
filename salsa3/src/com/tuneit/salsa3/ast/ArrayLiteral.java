@@ -7,9 +7,38 @@ import com.tuneit.salsa3.ParserException;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdes;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesPlan;
 
+import com.tuneit.salsa3.ast.serdes.annotations.ListParameter;
+import com.tuneit.salsa3.ast.serdes.annotations.NodeParameter;
+import com.tuneit.salsa3.ast.serdes.annotations.Parameter;
+
+
+/**
+ * <strong>ArrayLiteral</strong> is an AST node 
+ * <ul>
+ *   <li> elements -- 
+ * </ul>
+ * 
+ * @author Sergey Klyaus
+ */
 public class ArrayLiteral extends ASTNode {
+	
+	/**
+	 * <strong>Element</strong> is an AST node 
+	 * <ul>
+	 *   <li> key -- 
+	 *   <li> value -- 
+	 * </ul>
+	 * 
+	 * @author Sergey Klyaus
+	 */
 	public static class Element extends ASTNode {
+
+		@Parameter(offset = 1, optional = true)
+		@NodeParameter
 		private ASTNode key;
+
+		@Parameter(offset = 0, optional = false)
+		@NodeParameter
 		private ASTNode value;
 		
 		public Element(ASTNode value) {
@@ -30,13 +59,12 @@ public class ArrayLiteral extends ASTNode {
 			return value;
 		}
 		
-		static {
-			ASTNodeSerdesPlan plan = ASTNodeSerdes.newPlan(Element.class);
-			plan.addNodeParam(0, "value", false);
-			plan.addNodeParam(1, "key", true);
-		}
 	}
 	
+
+	@Parameter(offset = 0, optional = false)
+	@ListParameter
+	@NodeParameter
 	private List<ASTNode> elements;
 	
 	public ArrayLiteral() {
@@ -78,31 +106,11 @@ public class ArrayLiteral extends ASTNode {
 		elements.add(el);
 	}
 	
-	@Override
-	public String toString() {
-		StringBuilder sb = new StringBuilder();
 		
-		sb.append("ArrayLiteral {");
 		
-		for(ASTNode node : elements) {
-			Element el = (Element) node;
 			
-			if(el.key != null) {
-				sb.append(el.key.toString());
-				sb.append(" : ");
-			}
 			
-			sb.append(el.value.toString());			
-			sb.append(", ");
-		}
 		
-		sb.append("}");
 		
-		return sb.toString();
-	}
 	
-	static {
-		ASTNodeSerdesPlan plan = ASTNodeSerdes.newPlan(ArrayLiteral.class);
-		plan.addNodeListParam(0, "elements", false);
-	}
 }

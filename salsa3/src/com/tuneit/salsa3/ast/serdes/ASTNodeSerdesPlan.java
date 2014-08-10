@@ -1,18 +1,23 @@
 package com.tuneit.salsa3.ast.serdes;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 import com.tuneit.salsa3.ast.ASTNode;
+import com.tuneit.salsa3.ast.serdes.annotations.*;
 
 public class ASTNodeSerdesPlan {
-	public abstract class Param {
+	public class Param {
 		private int index;
 		private String name;
 		private boolean optional;
@@ -106,28 +111,11 @@ public class ASTNodeSerdesPlan {
 		} 
 	}
 	
-	public class StringParam extends Param {
-		public StringParam(int index, String name, boolean optional) {
-			super(index, name, optional);
-		}
-	}
-	
-	public class IntegerParam extends Param {
-		public IntegerParam(int index, String name, boolean optional) {
-			super(index, name, optional);
-		}
-	}
-	
-	public class BooleanParam extends Param {
-		public BooleanParam(int index, String name, boolean optional) {
-			super(index, name, optional);
-		}
-	}
-	
-	public class EnumParam<T extends Enum<T>> extends Param {
-		private Class<T> enumClass;
+	@SuppressWarnings("rawtypes")
+	public class EnumParam extends Param {
+		private Class enumClass;
 		
-		public EnumParam(int index, String name, boolean optional, Class<T> enumClass) {
+		public EnumParam(int index, String name, boolean optional, Class enumClass) {
 			super(index, name, optional);
 			
 			this.enumClass = enumClass;
@@ -137,6 +125,7 @@ public class ASTNodeSerdesPlan {
 			return o.toString();
 		}
 		
+		@SuppressWarnings("unchecked")
 		public Object deserialize(ASTNodeDeserializer deserializer, Object o) {
 			return Enum.valueOf(enumClass, (String) o);
 		}
@@ -157,102 +146,40 @@ public class ASTNodeSerdesPlan {
 		}
 	}
 	
-	public class NodeListParam extends Param {
-		public NodeListParam(int index, String name, boolean optional) {
+	public class ListParam extends Param {
+		private Param elementParam;
+		
+		public ListParam(int index, String name, boolean optional, Param elementParam) {
 			super(index, name, optional);
+			this.elementParam = elementParam;
 		}
 		
-		public Object serialize(ASTNodeSerializer serializer, Object o) throws ASTNodeSerdesException {
+		public Object serialize(ASTNodeSerializer serializer, Object ooList) throws ASTNodeSerdesException {
 			Object list = serializer.createList();
-			List<?> oList = (List<?>) o;
+			List<?> oList = (List<?>) ooList;
 			
 			for(Object item : oList) {
-				Object node = ASTNodeSerdes.serializeNode(serializer, item);
-				serializer.addToList(list, node);
+				Object o = elementParam.serialize(serializer, item);
+				serializer.addToList(list, o);
 			}
 			
 			return list;
 		}
 		
-		public Object deserialize(ASTNodeDeserializer deserializer, Object o) throws ASTNodeSerdesException {
-			List<ASTNode> nodeList = new ArrayList<ASTNode>();
-			Iterator<?> iterator = deserializer.getListIterator(o); 
+		@SuppressWarnings({ "rawtypes", "unchecked" })
+		public Object deserialize(ASTNodeDeserializer deserializer, Object list) throws ASTNodeSerdesException {
+			List oList = new ArrayList();
+			Iterator<?> iterator = deserializer.getListIterator(list); 
 			
 			while(iterator.hasNext()) {
-				Object node = iterator.next();
-				ASTNode astNode = ASTNodeSerdes.deserializeNode(deserializer, node);
+				Object o = elementParam.deserialize(deserializer, iterator.next());
 				
-				nodeList.add(astNode);
+				oList.add(o);
 			}
 			
-			return nodeList;
+			return oList;
 		}
-	}
-	
-	public class StringListParam extends Param {
-		public StringListParam(int index, String name, boolean optional) {
-			super(index, name, optional);
-		}
-		
-		@SuppressWarnings("unchecked")
-		public Object serialize(ASTNodeSerializer serializer, Object o) throws ASTNodeSerdesException {
-			Object list = serializer.createList();
-			List<String> oList = (List<String>) o;
-			
-			for(String str : oList) {
-				serializer.addToList(list, str);
-			}
-			
-			return list;
-		}
-		
-		public Object deserialize(ASTNodeDeserializer deserializer, Object o) throws ASTNodeSerdesException  {
-			List<String> stringList = new ArrayList<String>();
-			Iterator<?> iterator = deserializer.getListIterator(o); 
-			
-			while(iterator.hasNext()) {
-				String string = (String) iterator.next();
-				
-				stringList.add(string);
-			}
-			
-			return stringList;
-		}
-	}
-	
-	public class EnumListParam<T extends Enum<T>> extends Param {
-		private Class<T> enumClass;
-		
-		public EnumListParam(int index, String name, boolean optional, Class<T> enumClass) {
-			super(index, name, optional);
-			
-			this.enumClass = enumClass;
-		}
-		
-		public Object serialize(ASTNodeSerializer serializer, Object o) throws ASTNodeSerdesException {
-			Object list = serializer.createList();
-			List<?> eList = (List<?>) o;
-			
-			for(Object e : eList) {
-				serializer.addToList(list, e.toString());
-			}
-			
-			return list;
-		}
-		
-		public Object deserialize(ASTNodeDeserializer deserializer, Object o) throws ASTNodeSerdesException {
-			List<Object> enumList = new ArrayList<Object>();
-			Iterator<?> iterator = deserializer.getListIterator(o); 
-			
-			while(iterator.hasNext()) {
-				String string = (String) iterator.next();
-				
-				enumList.add(Enum.valueOf(enumClass, string));
-			}
-			
-			return enumList;
-		}
-	}
+	}	
 	
 	private Class<?> nodeClass;
 	private String nodeClassName;
@@ -267,43 +194,57 @@ public class ASTNodeSerdesPlan {
 		String className = nodeClass.getName();
 		int beginIndex = className.lastIndexOf('.');
 		nodeClassName = className.substring(beginIndex + 1);
+		
+		generatePlan();
 	}
 	
-
-	public String getClassName() {
-		return nodeClassName;
-	}
-	
-	public Param addStringParam(int index, String name, boolean optional) {
-		return addParam(new StringParam(index, name, optional));
-	}
-	
-	public Param addIntegerParam(int index, String name, boolean optional) {
-		return addParam(new IntegerParam(index, name, optional));
-	}
-	
-	public Param addBooleanParam(int index, String name, boolean optional) {
-		return addParam(new IntegerParam(index, name, optional));
-	}
-	
-	public Param addStringListParam(int index, String name, boolean optional) {
-		return addParam(new StringListParam(index, name, optional));
-	}
-	
-	public <T extends Enum<T>> Param addEnumParam(int index, String name, boolean optional, Class<T> enumClass) {
-		return addParam(new EnumParam<T>(index, name, optional, enumClass));
-	}
-	
-	public Param addNodeParam(int index, String name, boolean optional) {
-		return addParam(new NodeParam(index, name, optional));
-	}
-	
-	public Param addNodeListParam(int index, String name, boolean optional) {
-		return addParam(new NodeListParam(index, name, optional));
-	}
-	
-	public <T extends Enum<T>> Param addEnumListParam(int index, String name, boolean optional, Class<T> enumClass) {
-		return addParam(new EnumListParam<T>(index, name, optional, enumClass));
+	@SuppressWarnings("rawtypes")
+	private void generatePlan() {
+		for(Field field : nodeClass.getDeclaredFields()) {			
+			if(!field.isAnnotationPresent(Parameter.class)) {
+				continue;
+			}
+			
+			Param pampam;
+			Parameter parameter = field.getAnnotation(Parameter.class);
+			
+			int offset = parameter.offset();
+			String name = field.getName();
+			boolean optional = parameter.optional();
+			
+			if(field.isAnnotationPresent(NodeParameter.class)) {
+				pampam = new NodeParam(offset, name, optional);
+			}
+			else if(field.isAnnotationPresent(EnumParameter.class)) {
+				EnumParameter enumParameter = field.getAnnotation(EnumParameter.class);
+				Class enumClass = enumParameter.enumClass();
+				pampam = new EnumParam(offset, name, optional, enumClass);
+			}
+			else {
+				pampam = new Param(offset, name, optional);
+			}
+			
+			if(field.isAnnotationPresent(DefaultIntegerValue.class)) {
+				DefaultIntegerValue div = field.getAnnotation(DefaultIntegerValue.class);
+				int defaultValue = div.value();
+				
+				pampam.setDefaultValue(defaultValue);
+			}
+			
+			if(field.isAnnotationPresent(ListParameter.class)) {
+				pampam = new ListParam(offset, name, optional, pampam);
+			}
+			
+			addParam(pampam);
+			
+			/*
+			System.out.println(nodeClass.getName() + "." + field.getName() + " [" + offset + 
+								"] " + pampam.getClass().getName());
+			for(Annotation a : field.getAnnotations()) {
+				System.out.println(a.annotationType().getName());
+			}
+			*/
+		}
 	}
 	
 	private Param addParam(Param param) {
@@ -324,6 +265,10 @@ public class ASTNodeSerdesPlan {
 		param.findGetter(nodeClass);
 		
 		return param;
+	}
+	
+	public String getClassName() {
+		return nodeClassName;
 	}
 	
 	public Object serializeNode(ASTNodeSerializer serializer, Object node) throws ASTNodeSerdesException {
@@ -373,10 +318,8 @@ public class ASTNodeSerdesPlan {
 	}
 	
 	public ASTNode deserializeNode(ASTNodeDeserializer deserializer, Object o) throws ASTNodeSerdesException {
-		List<Object> paramValues = new ArrayList<Object>();
-		List<Class<?>> paramClasses = new ArrayList<Class<?>>();
-		
-		int index = -1;
+		Map<Integer, Object> paramValues = new TreeMap<Integer, Object>();
+		Map<Integer, Class<?>> paramClasses = new TreeMap<Integer, Class<?>>();
 		
 		for(Param param : params) {
 			Object value = deserializer.getNodeParam(o, param.getName(), param.getShortName());
@@ -390,17 +333,18 @@ public class ASTNodeSerdesPlan {
 				continue;
 			}
 			
-			if(index == param.getIndex()) {
+			if(paramValues.containsKey(param.getIndex())) {
 				throw new ASTNodeSerdesException("Duplicate parameter '" + param.getName() + 
-									"' at position " + Integer.toString(index) + 
+									"' at position " + Integer.toString(param.getIndex()) + 
 									" for class " + nodeClass.getName());
 			}
 			
-			index = param.getIndex();			
 			value = param.deserialize(deserializer, value);
 			
-			paramValues.add(value);
-			paramClasses.add(value.getClass());
+			paramValues.put(param.getIndex(), value);
+			paramClasses.put(param.getIndex(), value.getClass());
+						
+			// System.out.println(nodeClass.getName() + "." + param.getName() + " " +value.getClass().getName());
 		}
 		
 		try {
@@ -409,7 +353,7 @@ public class ASTNodeSerdesPlan {
 			Class<?>[] paramClassesArray = new Class<?>[paramClasses.size()]; 
 			int i = 0;
 			
-			for(Object paramClassObject : paramClasses.toArray()) {
+			for(Object paramClassObject : paramClasses.values().toArray()) {
 				Class<?> paramClass = (Class<?>) paramClassObject;
 				
 				if(List.class.isAssignableFrom(paramClass)) {
@@ -430,7 +374,7 @@ public class ASTNodeSerdesPlan {
 			}
 			
 			Constructor<?> ctor = nodeClass.getDeclaredConstructor(paramClassesArray);
-			return (ASTNode) ctor.newInstance(paramValues.toArray());
+			return (ASTNode) ctor.newInstance(paramValues.values().toArray());
 		} catch (NoSuchMethodException e) {
 			throw new ASTNodeSerdesException("Constructor is missing for class " + nodeClass.getName(), e);
 		} catch (SecurityException e) {

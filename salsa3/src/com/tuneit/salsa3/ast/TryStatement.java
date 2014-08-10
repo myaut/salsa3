@@ -10,7 +10,28 @@ import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesException;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesPlan;
 import com.tuneit.salsa3.ast.serdes.ASTStatementSerializer;
 
+
+
+/**
+ * <strong>TryStatement</strong> is an AST compound statement 
+ * <ul>
+ *   <li> catches -- 
+ *   <li> finallyStatement -- 
+ *   <li> currentStatement -- 
+ * </ul>
+ * 
+ * @author Sergey Klyaus
+ */
 public class TryStatement extends ASTStatement {
+	
+	/**
+	 * <strong>CatchStatement</strong> is an AST compound statement 
+	 * <ul>
+	 *   <li> varDecl -- 
+	 * </ul>
+	 * 
+	 * @author Sergey Klyaus
+	 */
 	private static class CatchStatement extends ASTStatement {
 		public VariableDeclaration varDecl;
 		
@@ -89,13 +110,5 @@ public class TryStatement extends ASTStatement {
 		}
 	}
 	
-	@Override
-	public String toString() {
-		return "TryStatement";
-	}
 	
-	/* Serialization code */
-	static {
-		ASTNodeSerdesPlan plan = ASTNodeSerdes.newPlan(TryStatement.class);
-	}
 }

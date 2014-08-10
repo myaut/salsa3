@@ -6,8 +6,26 @@ import java.util.List;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdes;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesPlan;
 
+import com.tuneit.salsa3.ast.serdes.annotations.ListParameter;
+import com.tuneit.salsa3.ast.serdes.annotations.Parameter;
+
+
+/**
+ * <strong>TypeName</strong> is an AST node 
+ * <ul>
+ *   <li> typeQualifiers -- 
+ *   <li> typeName -- 
+ * </ul>
+ * 
+ * @author Sergey Klyaus
+ */
 public class TypeName extends ASTNode {
+
+	@Parameter(offset = 1, optional = false)
+	@ListParameter
 	private List<String> typeQualifiers;
+
+	@Parameter(offset = 0, optional = false)
 	private String typeName;
 	
 	public TypeName(String typeName) {
@@ -32,28 +50,9 @@ public class TypeName extends ASTNode {
 		typeQualifiers.add(qualifier);
 	}
 	
-	@Override
-	public String toString() {
-		StringBuilder sb = new StringBuilder();
 		
-		sb.append("TypeName [name=");
-		sb.append(typeName);
 		
-		sb.append(", declarators=");		
-		for(String declarator : typeQualifiers) {
-			sb.append(declarator);
-			sb.append(",");
-		}
 		
-		sb.append("]]");
 		
-		return sb.toString();
-	}
 	
-	/* Serialization code */
-	static {
-		ASTNodeSerdesPlan plan = ASTNodeSerdes.newPlan(TypeName.class);
-		plan.addStringParam(0, "typeName", false);
-		plan.addStringListParam(1, "typeQualifiers", false);
-	}	
 }

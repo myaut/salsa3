@@ -2,6 +2,13 @@ package com.tuneit.salsa3.ast;
 
 import com.tuneit.salsa3.ParserException;
 
+
+
+/**
+ * <strong>ASTNode</strong> is an AST  
+ * 
+ * @author Sergey Klyaus
+ */
 public class ASTNode {
 	private ASTNode realNode = null;
 	private ASTNode parent = null;

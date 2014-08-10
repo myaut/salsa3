@@ -3,7 +3,22 @@ package com.tuneit.salsa3.ast;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdes;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesPlan;
 
+import com.tuneit.salsa3.ast.serdes.annotations.NodeParameter;
+import com.tuneit.salsa3.ast.serdes.annotations.Parameter;
+
+
+/**
+ * <strong>PHPAddToArray</strong> is an AST node 
+ * <ul>
+ *   <li> array -- 
+ * </ul>
+ * 
+ * @author Sergey Klyaus
+ */
 public class PHPAddToArray extends ASTNode {
+
+	@Parameter(offset = 0, optional = false)
+	@NodeParameter
 	private ASTNode array;
 	
 	public PHPAddToArray(ASTNode array) {
@@ -22,14 +37,5 @@ public class PHPAddToArray extends ASTNode {
 		return new PHPAddToArray(array);
 	}
 
-	@Override
-	public String toString() {
-		return "PHPAddToArray [array=" + array + "]";
-	}
 	
-	/* Serialization code */
-	static {
-		ASTNodeSerdesPlan plan = ASTNodeSerdes.newPlan(PHPAddToArray.class);
-		plan.addNodeParam(0, "array", false);
-	}
 }

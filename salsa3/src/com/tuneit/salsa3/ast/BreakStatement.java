@@ -3,8 +3,26 @@ package com.tuneit.salsa3.ast;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdes;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesPlan;
 
+import com.tuneit.salsa3.ast.serdes.annotations.Parameter;
+import com.tuneit.salsa3.ast.serdes.annotations.DefaultIntegerValue;
+
+
+/**
+ * <strong>BreakStatement</strong> is an AST node 
+ * <ul>
+ *   <li> label -- 
+ *   <li> breakNesting -- 
+ * </ul>
+ * 
+ * @author Sergey Klyaus
+ */
 public class BreakStatement extends ASTNode {
+
+	@Parameter(offset = 0, optional = true)
 	private String label;
+
+	@Parameter(offset = 0, optional = true)
+	@DefaultIntegerValue(value = 1)
 	private int breakNesting;
 	
 	public BreakStatement() {
@@ -30,20 +48,6 @@ public class BreakStatement extends ASTNode {
 		return this.breakNesting;
 	}
 	
-	@Override
-	public String toString() {
-		if(this.label != null) {
-			return "Break [n=" + this.breakNesting + 
-						", label=" + this.label + "]";
-		}
 		
-		return "Break [n=" + this.breakNesting + "]";
-	}
 	
-	/* Serialization code */
-	static {
-		ASTNodeSerdesPlan plan = ASTNodeSerdes.newPlan(BreakStatement.class);
-		plan.addIntegerParam(0, "breakNesting", true).setDefaultValue(1);
-		plan.addStringParam(0, "label", true);
-	}
 }

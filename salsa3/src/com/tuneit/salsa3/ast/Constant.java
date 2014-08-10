@@ -3,7 +3,20 @@ package com.tuneit.salsa3.ast;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdes;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesPlan;
 
+import com.tuneit.salsa3.ast.serdes.annotations.Parameter;
+
+
+/**
+ * <strong>Constant</strong> is an AST node 
+ * <ul>
+ *   <li> constName -- 
+ * </ul>
+ * 
+ * @author Sergey Klyaus
+ */
 public class Constant extends ASTNode {
+
+	@Parameter(offset = 0, optional = false)
 	private String constName;
 	
 	public Constant(String constName) {
@@ -18,13 +31,5 @@ public class Constant extends ASTNode {
 		return new Constant(constName);
 	}
 
-	@Override
-	public String toString() {
-		return "Constant [constName=" + constName + "]";
-	}
 	
-	static {
-		ASTNodeSerdesPlan plan = ASTNodeSerdes.newPlan(Constant.class);
-		plan.addStringParam(0, "constName", false);
-	}
 }

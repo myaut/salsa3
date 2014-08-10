@@ -3,9 +3,32 @@ package com.tuneit.salsa3.ast;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdes;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesPlan;
 
+import com.tuneit.salsa3.ast.serdes.annotations.NodeParameter;
+import com.tuneit.salsa3.ast.serdes.annotations.Parameter;
+
+
+/**
+ * <strong>ForeachStatement</strong> is an AST compound statement 
+ * <ul>
+ *   <li> iterable -- 
+ *   <li> key -- 
+ *   <li> value -- 
+ * </ul>
+ * 
+ * @author Sergey Klyaus
+ */
 public class ForeachStatement extends ASTStatement {
+
+	@Parameter(offset = 0, optional = false)
+	@NodeParameter
 	private ASTNode iterable;
+
+	@Parameter(offset = 2, optional = true)
+	@NodeParameter
 	private ASTNode key;
+
+	@Parameter(offset = 1, optional = false)
+	@NodeParameter
 	private ASTNode value;
 	
 	public ForeachStatement(ASTNode iterable) {
@@ -50,18 +73,6 @@ public class ForeachStatement extends ASTStatement {
 		return iterable;
 	}
 
-	@Override
-	public String toString() {
-		return "Foreach [iterable=" + iterable + ", key=" + key
-				+ ", value=" + value + "]";
-	}
 	
-	/* Serialization code */
-	static {
-		ASTNodeSerdesPlan plan = ASTNodeSerdes.newPlan(ForeachStatement.class);
-		plan.addNodeParam(0, "iterable", false);
-		plan.addNodeParam(1, "value", false);
-		plan.addNodeParam(2, "key", true);
-	}
 }
 

@@ -12,20 +12,46 @@ import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesException;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesPlan;
 import com.tuneit.salsa3.ast.serdes.ASTStatementSerializer;
 
+import com.tuneit.salsa3.ast.serdes.annotations.NodeParameter;
+import com.tuneit.salsa3.ast.serdes.annotations.Parameter;
+
+
+/**
+ * <strong>SwitchStatement</strong> is an AST compound statement 
+ * <ul>
+ *   <li> expression -- 
+ *   <li> cases -- 
+ * </ul>
+ * 
+ * @author Sergey Klyaus
+ */
 public class SwitchStatement extends ASTStatement {
+	
+	/**
+	 * <strong>Case</strong> is an AST  
+	 * <ul>
+	 *   <li> pattern -- 
+	 *   <li> iterator -- 
+	 * </ul>
+	 * 
+	 * @author Sergey Klyaus
+	 */
 	public static class Case {
 		public ASTNode pattern;
 		public ListIterator<ASTNode> iterator;
 	};
 	
-	private ASTNode expr;
+
+	@Parameter(offset = 0, optional = false)
+	@NodeParameter
+	private ASTNode expression;
 	private List<Case> cases;
 	
-	public SwitchStatement(ASTNode expr) {
-		this.expr = expr;
+	public SwitchStatement(ASTNode expression) {
+		this.expression = expression;
 		this.cases = new ArrayList<Case>();
 		
-		expr.reuseInExpression(this);
+		expression.reuseInExpression(this);
 	}
 	
 	public void addCase(ASTNode pattern) {
@@ -41,17 +67,13 @@ public class SwitchStatement extends ASTStatement {
 	}
 
 	public ASTNode getExpression() {
-		return expr;
+		return expression;
 	}
 
 	public List<Case> getCases() {
 		return cases;
 	}
 
-	@Override
-	public String toString() {
-		return "Switch [expr=" + expr + "]";
-	}
 	
 	@Override
 	public Object serializeStatement(ASTStatementSerializer serializer) throws ASTNodeSerdesException {
@@ -103,9 +125,4 @@ public class SwitchStatement extends ASTStatement {
 		}
 	}
 	
-	/* Serialization code */
-	static {
-		ASTNodeSerdesPlan plan = ASTNodeSerdes.newPlan(SwitchStatement.class);
-		plan.addNodeParam(0, "expression", false);
-	}
 }

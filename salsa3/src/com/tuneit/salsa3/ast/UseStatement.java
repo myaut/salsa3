@@ -3,8 +3,27 @@ package com.tuneit.salsa3.ast;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdes;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesPlan;
 
+import com.tuneit.salsa3.ast.serdes.annotations.NodeParameter;
+import com.tuneit.salsa3.ast.serdes.annotations.Parameter;
+
+
+/**
+ * <strong>UseStatement</strong> is an AST node 
+ * <ul>
+ *   <li> name -- 
+ *   <li> alias -- 
+ * </ul>
+ * 
+ * @author Sergey Klyaus
+ */
 public class UseStatement extends ASTNode {
+
+	@Parameter(offset = 0, optional = false)
+	@NodeParameter
 	private NamespaceName name;
+
+	@Parameter(offset = 1, optional = true)
+	@NodeParameter
 	private NamespaceName alias;
 	
 	public UseStatement(ASTNode name) {
@@ -27,15 +46,5 @@ public class UseStatement extends ASTNode {
 		return alias;
 	}
 
-	@Override
-	public String toString() {
-		return "UseStatement [name=" + name + ", alias=" + alias + "]";
-	}
 	
-	/* Serialization code */
-	static {
-		ASTNodeSerdesPlan plan = ASTNodeSerdes.newPlan(UseStatement.class);
-		plan.addNodeParam(0, "name", false);
-		plan.addNodeParam(1, "alias", true);
-	}
 }

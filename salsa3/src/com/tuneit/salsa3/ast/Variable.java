@@ -2,7 +2,20 @@ package com.tuneit.salsa3.ast;
 
 import com.tuneit.salsa3.ast.serdes.*;
 
+import com.tuneit.salsa3.ast.serdes.annotations.Parameter;
+
+
+/**
+ * <strong>Variable</strong> is an AST node 
+ * <ul>
+ *   <li> varName -- 
+ * </ul>
+ * 
+ * @author Sergey Klyaus
+ */
 public class Variable extends ASTNode {
+
+	@Parameter(offset = 0, optional = false)
 	private String varName;
 	
 	public Variable(String varName) {
@@ -17,14 +30,5 @@ public class Variable extends ASTNode {
 		return new Variable(varName);
 	}
 
-	@Override
-	public String toString() {
-		return "Variable [varName=" + varName + "]";
-	}
 	
-	/* Serialization code */
-	static {
-		ASTNodeSerdesPlan plan = ASTNodeSerdes.newPlan(Variable.class);
-		plan.addStringParam(0, "varName", false);
-	}	
 }

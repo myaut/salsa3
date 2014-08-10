@@ -6,10 +6,43 @@ import java.util.List;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdes;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesPlan;
 
+import com.tuneit.salsa3.ast.serdes.annotations.ListParameter;
+import com.tuneit.salsa3.ast.serdes.annotations.NodeParameter;
+import com.tuneit.salsa3.ast.serdes.annotations.Parameter;
+
+
+/**
+ * <strong>FunctionCall</strong> is an AST node 
+ * <ul>
+ *   <li> function -- 
+ *   <li> argCount -- 
+ *   <li> arguments -- 
+ * </ul>
+ * 
+ * @author Sergey Klyaus
+ */
 public class FunctionCall extends ASTNode {	
+	
+	/**
+	 * <strong>Argument</strong> is an AST node 
+	 * <ul>
+	 *   <li> argument -- 
+	 *   <li> key -- 
+	 *   <li> offset -- 
+	 * </ul>
+	 * 
+	 * @author Sergey Klyaus
+	 */
 	public static class Argument extends ASTNode {
+
+		@Parameter(offset = 0, optional = false)
+		@NodeParameter
 		public ASTNode argument;
+
+		@Parameter(offset = 1, optional = true)
 		public String key;
+
+		@Parameter(offset = 1, optional = true)
 		public int offset;
 		
 		public Argument(ASTNode argument, String key) {
@@ -45,18 +78,18 @@ public class FunctionCall extends ASTNode {
 			return offset;
 		}
 		
-		/* Serialization code */
-		static {
-			ASTNodeSerdesPlan plan = ASTNodeSerdes.newPlan(Argument.class);
-			plan.addNodeParam(0, "argument", false);
-			plan.addIntegerParam(1, "offset", true);
-			plan.addStringParam(1, "key", true);
-		}
 	}
 	
+
+	@Parameter(offset = 0, optional = false)
+	@NodeParameter
 	private ASTNode function;	
 	
 	private int argCount;
+
+	@Parameter(offset = 1, optional = false)
+	@ListParameter
+	@NodeParameter
 	private List<Argument> arguments;
 	
 	public FunctionCall(ASTNode function) {
@@ -114,35 +147,10 @@ public class FunctionCall extends ASTNode {
 		return arguments;
 	}
 	
-	@Override
-	public String toString() {
-		StringBuilder sb = new StringBuilder();
 		
-		sb.append("FunctionCall [name=");
-		sb.append(function.toString());
 		
-		for(Argument argument : arguments) {
-			sb.append(", ");
 			
-			if(argument.key != null) {
-				sb.append(argument.key);
-			}
-			else {
-				sb.append(argument.offset);
-			}
-			sb.append("=");
-			sb.append(argument.argument.toString());
-		}
 		
-		sb.append("]");
 		
-		return sb.toString();
-	}
 	
-	/* Serialization code */
-	static {
-		ASTNodeSerdesPlan plan = ASTNodeSerdes.newPlan(FunctionCall.class);
-		plan.addNodeParam(0, "function", false);
-		plan.addNodeListParam(1, "arguments", false);
-	}
 }

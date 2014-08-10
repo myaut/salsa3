@@ -9,8 +9,18 @@ import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesException;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesPlan;
 import com.tuneit.salsa3.ast.serdes.ASTStatementSerializer;
 
+
 /**
  * Class for compound statements
+ */
+
+/**
+ * <strong>ASTStatement</strong> is an AST node 
+ * <ul>
+ *   <li> children -- 
+ * </ul>
+ * 
+ * @author Sergey Klyaus
  */
 public class ASTStatement extends ASTNode {
 	public static final String TABSTOP = "   ";
@@ -75,8 +85,4 @@ public class ASTStatement extends ASTNode {
 		children = newChildren;
 	}
 	
-	/* Serialization code */
-	static {
-		ASTNodeSerdesPlan plan = ASTNodeSerdes.newPlan(ASTStatement.class);
-	}
 }

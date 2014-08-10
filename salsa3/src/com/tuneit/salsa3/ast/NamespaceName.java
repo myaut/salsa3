@@ -6,7 +6,22 @@ import java.util.List;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdes;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesPlan;
 
+import com.tuneit.salsa3.ast.serdes.annotations.ListParameter;
+import com.tuneit.salsa3.ast.serdes.annotations.Parameter;
+
+
+/**
+ * <strong>NamespaceName</strong> is an AST node 
+ * <ul>
+ *   <li> components -- 
+ * </ul>
+ * 
+ * @author Sergey Klyaus
+ */
 public class NamespaceName extends ASTNode {
+
+	@Parameter(offset = 0, optional = false)
+	@ListParameter
 	private List<String> components;
 	
 	public NamespaceName() {
@@ -25,25 +40,9 @@ public class NamespaceName extends ASTNode {
 		return components;
 	}
 	
-	@Override
-	public String toString() {
-		StringBuilder sb = new StringBuilder();
 		
-		sb.append("NamespaceName [");
 		
-		for(String component : components) {
-			sb.append(component);
-			sb.append(".");
-		}
 		
-		sb.append("]");
 		
-		return sb.toString();
-	}
 	
-	/* Serialization code */
-	static {
-		ASTNodeSerdesPlan plan = ASTNodeSerdes.newPlan(NamespaceName.class);
-		plan.addStringListParam(0, "components", false);
-	}	
 }

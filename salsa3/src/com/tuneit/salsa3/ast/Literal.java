@@ -3,6 +3,19 @@ package com.tuneit.salsa3.ast;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdes;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesPlan;
 
+import com.tuneit.salsa3.ast.serdes.annotations.Parameter;
+import com.tuneit.salsa3.ast.serdes.annotations.EnumParameter;
+
+
+/**
+ * <strong>Literal</strong> is an AST node 
+ * <ul>
+ *   <li> token -- 
+ *   <li> type -- 
+ * </ul>
+ * 
+ * @author Sergey Klyaus
+ */
 public class Literal extends ASTNode {
 	public enum Type {
 		LIT_NULL,
@@ -13,7 +26,12 @@ public class Literal extends ASTNode {
 		LIT_CHARACTER
 	};
 	
+
+	@Parameter(offset = 1, optional = false)
 	private String token;
+
+	@Parameter(offset = 0, optional = false)
+	@EnumParameter(enumClass = Type.class)
 	private Type type;
 	
 	public Literal(Type type, String token) {
@@ -34,10 +52,6 @@ public class Literal extends ASTNode {
 		return type;
 	}
 
-	@Override
-	public String toString() {
-		return "Literal [token=" + getEscapedToken() + ", type=" + type + "]";
-	}
 	
 	private String getEscapedToken() {
 		StringBuilder sb = new StringBuilder();
@@ -79,10 +93,4 @@ public class Literal extends ASTNode {
 		return sb.toString();
 	}
 	
-	/* Serialization code */
-	static {
-		ASTNodeSerdesPlan plan = ASTNodeSerdes.newPlan(Literal.class);
-		plan.addEnumParam(0, "type", false, Type.class);
-		plan.addStringParam(1, "token", false);
-	}
 }

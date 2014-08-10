@@ -7,6 +7,22 @@ import java.util.List;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdes;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesPlan;
 
+import com.tuneit.salsa3.ast.serdes.annotations.ListParameter;
+import com.tuneit.salsa3.ast.serdes.annotations.NodeParameter;
+import com.tuneit.salsa3.ast.serdes.annotations.Parameter;
+import com.tuneit.salsa3.ast.serdes.annotations.EnumParameter;
+
+
+/**
+ * <strong>ClassDeclaration</strong> is an AST compound statement 
+ * <ul>
+ *   <li> type -- 
+ *   <li> className -- 
+ *   <li> superClasses -- 
+ * </ul>
+ * 
+ * @author Sergey Klyaus
+ */
 public class ClassDeclaration extends ASTStatement {
 	public enum SuperClassModifier {
 		SC_EXTENDS_PUBLIC,
@@ -35,8 +51,24 @@ public class ClassDeclaration extends ASTStatement {
 		CLASS_TRAIT
 	}
 	
+	
+	/**
+	 * <strong>SuperClass</strong> is an AST node 
+	 * <ul>
+	 *   <li> modifiers -- 
+	 *   <li> name -- 
+	 * </ul>
+	 * 
+	 * @author Sergey Klyaus
+	 */
 	public static class SuperClass extends ASTNode {
+
+		@Parameter(offset = 1, optional = false)
+		@ListParameter
+		@EnumParameter(enumClass = SuperClassModifier.class)
 		private List<SuperClassModifier> modifiers;
+
+		@Parameter(offset = 0, optional = false)
 		private String name;
 
 		public SuperClass(String name, List<SuperClassModifier> modifiers) {
@@ -53,15 +85,22 @@ public class ClassDeclaration extends ASTStatement {
 			return name;
 		}
 		
-		/* Serialization code */
-		static {
-			ASTNodeSerdesPlan plan = ASTNodeSerdes.newPlan(SuperClass.class);
-			plan.addStringParam(0, "name", false);
-			plan.addEnumListParam(1, "modifiers", false, SuperClassModifier.class);
-		}
 	}
 	
+	
+	/**
+	 * <strong>Member</strong> is an AST compound statement 
+	 * <ul>
+	 *   <li> modifiers -- 
+	 * </ul>
+	 * 
+	 * @author Sergey Klyaus
+	 */
 	public static class Member extends ASTStatement {
+
+		@Parameter(offset = 0, optional = false)
+		@ListParameter
+		@EnumParameter(enumClass = MemberModifier.class)
 		private List<MemberModifier> modifiers;
 		
 		public Member(List<MemberModifier> modifiers) {
@@ -72,15 +111,19 @@ public class ClassDeclaration extends ASTStatement {
 			return modifiers;
 		}
 		
-		/* Serialization code */
-		static {
-			ASTNodeSerdesPlan plan = ASTNodeSerdes.newPlan(Member.class);
-			plan.addEnumListParam(0, "modifiers", false, MemberModifier.class);
-		}
 	}
 	
+
+	@Parameter(offset = 0, optional = false)
+	@EnumParameter(enumClass = Type.class)
 	private Type type;
+
+	@Parameter(offset = 1, optional = false)
 	private String className;
+
+	@Parameter(offset = 2, optional = false)
+	@ListParameter
+	@NodeParameter
 	private List<SuperClass> superClasses;
 	
 	public ClassDeclaration(Type type, String className,
@@ -118,13 +161,6 @@ public class ClassDeclaration extends ASTStatement {
 		return superClasses;
 	}
 	
-	/* Serialization code */
-	static {
-		ASTNodeSerdesPlan plan = ASTNodeSerdes.newPlan(ClassDeclaration.class);
-		plan.addEnumParam(0, "type", false, Type.class);
-		plan.addStringParam(1, "className", false);
-		plan.addNodeListParam(2, "superClasses", false);
-	}
 
 	public void addMember(ASTNode declaration, List<MemberModifier> modifiers) {
 		Member member = new Member(modifiers); 

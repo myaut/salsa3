@@ -6,9 +6,32 @@ import java.util.ArrayList;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdes;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesPlan;
 
+import com.tuneit.salsa3.ast.serdes.annotations.NodeParameter;
+import com.tuneit.salsa3.ast.serdes.annotations.Parameter;
+
+
+/**
+ * <strong>VariableDeclaration</strong> is an AST node 
+ * <ul>
+ *   <li> variable -- 
+ *   <li> typeName -- 
+ *   <li> defaultValue -- 
+ * </ul>
+ * 
+ * @author Sergey Klyaus
+ */
 public class VariableDeclaration extends ASTNode {
+
+	@Parameter(offset = 0, optional = false)
+	@NodeParameter
 	private Variable variable;
+
+	@Parameter(offset = 1, optional = false)
+	@NodeParameter
 	private TypeName typeName;
+
+	@Parameter(offset = 2, optional = true)
+	@NodeParameter
 	private ASTNode defaultValue;
 	
 	public VariableDeclaration(ASTNode var, ASTNode typeName) {
@@ -47,31 +70,10 @@ public class VariableDeclaration extends ASTNode {
 		return defaultValue;
 	}
 
-	@Override
-	public String toString() {
-		StringBuilder sb = new StringBuilder();
 		
-		sb.append("VD [");
 		
-		sb.append(variable);
-		sb.append(" : ");
-		sb.append(typeName);
 		
-		if(defaultValue != null) {
-			sb.append(" = ");
-			sb.append(defaultValue);
-		}
 		
-		sb.append("]");
 		
-		return sb.toString();
-	}
 
-	/* Serialization code */
-	static {
-		ASTNodeSerdesPlan plan = ASTNodeSerdes.newPlan(VariableDeclaration.class);
-		plan.addNodeParam(0, "variable", false);
-		plan.addNodeParam(1, "typeName", false);
-		plan.addNodeParam(2, "defaultValue", true);
-	}
 }

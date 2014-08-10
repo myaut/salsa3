@@ -3,9 +3,32 @@ package com.tuneit.salsa3.ast;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdes;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesPlan;
 
+import com.tuneit.salsa3.ast.serdes.annotations.NodeParameter;
+import com.tuneit.salsa3.ast.serdes.annotations.Parameter;
+
+
+/**
+ * <strong>ConditionalExpression</strong> is an AST node 
+ * <ul>
+ *   <li> condition -- 
+ *   <li> expressionTrue -- 
+ *   <li> expressionFalse -- 
+ * </ul>
+ * 
+ * @author Sergey Klyaus
+ */
 public class ConditionalExpression extends ASTNode {	
+
+	@Parameter(offset = 0, optional = false)
+	@NodeParameter
 	private ASTNode condition;
+
+	@Parameter(offset = 1, optional = false)
+	@NodeParameter
 	private ASTNode expressionTrue;
+
+	@Parameter(offset = 2, optional = false)
+	@NodeParameter
 	private ASTNode expressionFalse;
 	
 	public ConditionalExpression(ASTNode condition, ASTNode expressionTrue,
@@ -51,11 +74,4 @@ public class ConditionalExpression extends ASTNode {
 		return condition;
 	}
 	
-	/* Serialization code */
-	static {
-		ASTNodeSerdesPlan plan = ASTNodeSerdes.newPlan(ConditionalExpression.class);
-		plan.addNodeParam(0, "condition", false);
-		plan.addNodeParam(1, "expressionTrue", false);
-		plan.addNodeParam(2, "expressionFalse", false);
-	}
 }

@@ -3,8 +3,27 @@ package com.tuneit.salsa3.ast;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdes;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesPlan;
 
+import com.tuneit.salsa3.ast.serdes.annotations.NodeParameter;
+import com.tuneit.salsa3.ast.serdes.annotations.Parameter;
+
+
+/**
+ * <strong>Assign</strong> is an AST node 
+ * <ul>
+ *   <li> left -- 
+ *   <li> right -- 
+ * </ul>
+ * 
+ * @author Sergey Klyaus
+ */
 public class Assign extends ASTNode {
+
+	@Parameter(offset = 0, optional = false)
+	@NodeParameter
 	private ASTNode left;
+
+	@Parameter(offset = 1, optional = false)
+	@NodeParameter
 	private ASTNode right;
 	
 	public Assign(ASTNode left, ASTNode right) {
@@ -24,15 +43,5 @@ public class Assign extends ASTNode {
 		return right;
 	}
 
-	@Override
-	public String toString() {
-		return "Assign [left=" + left + ", right=" + right + "]";
-	}
 	
-	/* Serialization code */
-	static {
-		ASTNodeSerdesPlan plan = ASTNodeSerdes.newPlan(Assign.class);
-		plan.addNodeParam(0, "left", false);
-		plan.addNodeParam(1, "right", false);
-	}
 }

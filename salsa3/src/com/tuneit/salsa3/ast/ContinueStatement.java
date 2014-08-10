@@ -3,8 +3,26 @@ package com.tuneit.salsa3.ast;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdes;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesPlan;
 
+import com.tuneit.salsa3.ast.serdes.annotations.Parameter;
+import com.tuneit.salsa3.ast.serdes.annotations.DefaultIntegerValue;
+
+
+/**
+ * <strong>ContinueStatement</strong> is an AST node 
+ * <ul>
+ *   <li> label -- 
+ *   <li> continueNesting -- 
+ * </ul>
+ * 
+ * @author Sergey Klyaus
+ */
 public class ContinueStatement extends ASTNode {
+
+	@Parameter(offset = 0, optional = true)
 	private String label;
+
+	@Parameter(offset = 0, optional = true)
+	@DefaultIntegerValue(value = 1)
 	private int continueNesting;
 	
 	public ContinueStatement() {
@@ -30,20 +48,6 @@ public class ContinueStatement extends ASTNode {
 		return this.continueNesting;
 	}
 	
-	@Override
-	public String toString() {
-		if(this.label != null) {
-			return "Continue [n=" + this.continueNesting + 
-							", label=" + this.label + "]";
-		}
 		
-		return "Continue [n=" + this.continueNesting + "]";
-	}
 	
-	/* Serialization code */
-	static {
-		ASTNodeSerdesPlan plan = ASTNodeSerdes.newPlan(ContinueStatement.class);
-		plan.addIntegerParam(0, "continueNesting", true).setDefaultValue(1);
-		plan.addStringParam(0, "label", true);
-	}
 }

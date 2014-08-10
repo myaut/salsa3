@@ -3,7 +3,6 @@ package com.tuneit.salsa3.ast.serdes;
 import java.util.HashMap;
 
 import com.tuneit.salsa3.ast.ASTNode;
-import com.tuneit.salsa3.ast.Literal;
 
 public class ASTNodeSerdes {
 	private static final String AST_PACKAGE_NAME = "com.tuneit.salsa3.ast";
@@ -30,7 +29,7 @@ public class ASTNodeSerdes {
 		ASTNodeSerdesPlan plan = classHashMap.get(o.getClass());
 		
 		if(plan == null) {
-			throw new ASTNodeSerdesException("Doesn't know how to serialize node '" + o.getClass().getName() + "'");
+			plan = newPlan(o.getClass());
 		}
 		
 		return plan.serializeNode(serializer, o);
@@ -40,18 +39,13 @@ public class ASTNodeSerdes {
 		String className = deserializer.getNodeClassName(o);
 		ASTNodeSerdesPlan plan = planHashMap.get(className);
 		
-		if(plan == null) {
-			/* If plan was not created, forcibly load class */ 
+		if(plan == null) { 
 			try {
-				Class.forName(AST_PACKAGE_NAME + "." + className, true, ASTNode.class.getClassLoader());
+				Class<?> nodeClass = Class.forName(AST_PACKAGE_NAME + "." + className, true, 
+												ASTNode.class.getClassLoader());
+				plan = newPlan(nodeClass);
 			} catch (ClassNotFoundException e) {
 				throw new ASTNodeSerdesException("Class '" + className + "' was not found", e);
-			}
-			
-			plan = planHashMap.get(className);
-			
-			if(plan == null) {
-				throw new ASTNodeSerdesException("Doesn't know how to deserialize node of class '" + className + "'");
 			}
 		}
 		

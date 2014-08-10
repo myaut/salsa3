@@ -3,8 +3,26 @@ package com.tuneit.salsa3.ast;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdes;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesPlan;
 
+import com.tuneit.salsa3.ast.serdes.annotations.NodeParameter;
+import com.tuneit.salsa3.ast.serdes.annotations.Parameter;
+
+
+/**
+ * <strong>InstanceOf</strong> is an AST node 
+ * <ul>
+ *   <li> expression -- 
+ *   <li> className -- 
+ * </ul>
+ * 
+ * @author Sergey Klyaus
+ */
 public class InstanceOf extends ASTNode {
+
+	@Parameter(offset = 1, optional = false)
+	@NodeParameter
 	private ASTNode expression;
+
+	@Parameter(offset = 0, optional = false)
 	private String className;
 	
 	public InstanceOf(String className, ASTNode expression) {
@@ -25,10 +43,4 @@ public class InstanceOf extends ASTNode {
 		return className;
 	}
 	
-	/* Serialization code */
-	static {
-		ASTNodeSerdesPlan plan = ASTNodeSerdes.newPlan(InstanceOf.class);
-		plan.addStringParam(0, "className", false);
-		plan.addNodeParam(1, "expression", false);
-	}
 }

@@ -6,8 +6,26 @@ import java.util.List;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdes;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesPlan;
 
+import com.tuneit.salsa3.ast.serdes.annotations.ListParameter;
+import com.tuneit.salsa3.ast.serdes.annotations.Parameter;
+
+
+/**
+ * <strong>StaticClassMember</strong> is an AST node 
+ * <ul>
+ *   <li> classNames -- 
+ *   <li> member -- 
+ * </ul>
+ * 
+ * @author Sergey Klyaus
+ */
 public class StaticClassMember extends ASTNode {
+
+	@Parameter(offset = 1, optional = false)
+	@ListParameter
 	private List<String> classNames;
+
+	@Parameter(offset = 0, optional = false)
 	private String member;
 	
 	public StaticClassMember(String member) {
@@ -36,28 +54,10 @@ public class StaticClassMember extends ASTNode {
 		return this.classNames;
 	}
 	
-	@Override
-	public String toString() {
-		StringBuilder sb = new StringBuilder();
 		
-		sb.append("StaticClassMember[");
 		
-		for(String className : classNames) {
-			sb.append(className);
-			sb.append("::");
-		}
 		
-		sb.append(member.toString());
 		
-		sb.append("]");
 		
-		return sb.toString();
-	}
 	
-	/* Serialization code */
-	static {
-		ASTNodeSerdesPlan plan = ASTNodeSerdes.newPlan(StaticClassMember.class);
-		plan.addStringParam(0, "member", false);
-		plan.addStringListParam(1, "classNames", false);
-	}
 }

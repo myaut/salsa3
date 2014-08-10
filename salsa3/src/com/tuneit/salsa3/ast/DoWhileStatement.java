@@ -3,7 +3,22 @@ package com.tuneit.salsa3.ast;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdes;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesPlan;
 
+import com.tuneit.salsa3.ast.serdes.annotations.NodeParameter;
+import com.tuneit.salsa3.ast.serdes.annotations.Parameter;
+
+
+/**
+ * <strong>DoWhileStatement</strong> is an AST compound statement 
+ * <ul>
+ *   <li> condition -- 
+ * </ul>
+ * 
+ * @author Sergey Klyaus
+ */
 public class DoWhileStatement extends ASTStatement {
+
+	@Parameter(offset = 0, optional = false)
+	@NodeParameter
 	private ASTNode condition;
 	
 	public DoWhileStatement() {
@@ -24,13 +39,5 @@ public class DoWhileStatement extends ASTStatement {
 		this.condition = condition;
 	}
 	
-	@Override
-	public String toString() {
-		return "DoWhile [" + condition + "]";
-	}
 	
-	static {
-		ASTNodeSerdesPlan plan = ASTNodeSerdes.newPlan(DoWhileStatement.class);
-		plan.addNodeParam(0, "condition", false);
-	}
 }

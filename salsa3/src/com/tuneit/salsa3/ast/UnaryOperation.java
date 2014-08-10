@@ -4,6 +4,20 @@ import com.tuneit.salsa3.ast.BinaryOperation.Type;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdes;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesPlan;
 
+import com.tuneit.salsa3.ast.serdes.annotations.NodeParameter;
+import com.tuneit.salsa3.ast.serdes.annotations.Parameter;
+import com.tuneit.salsa3.ast.serdes.annotations.EnumParameter;
+
+
+/**
+ * <strong>UnaryOperation</strong> is an AST node 
+ * <ul>
+ *   <li> expression -- 
+ *   <li> type -- 
+ * </ul>
+ * 
+ * @author Sergey Klyaus
+ */
 public class UnaryOperation extends ASTNode implements Cloneable {
 	public enum Type {
 		/* Bit operations */
@@ -21,40 +35,35 @@ public class UnaryOperation extends ASTNode implements Cloneable {
 		UOP_POST_INCREMENT
 	};
 	
-	private ASTNode expr;
+
+	@Parameter(offset = 1, optional = false)
+	@NodeParameter
+	private ASTNode expression;
 	
+
+	@Parameter(offset = 0, optional = false)
+	@EnumParameter(enumClass = Type.class)
 	private Type type;
 	
-	public UnaryOperation(Type type, ASTNode expr) {
+	public UnaryOperation(Type type, ASTNode expression) {
 		super();
-		this.expr = expr;
+		this.expression = expression;
 		this.type = type;
 		
-		expr.reuseInExpression(this);
+		expression.reuseInExpression(this);
 	}
 	
 	public ASTNode clone() {
-		return new UnaryOperation(type, expr);
+		return new UnaryOperation(type, expression);
 	}
 
 	public ASTNode getExpression() {
-		return expr;
+		return expression;
 	}
 
 	public Type getType() {
 		return type;
 	}
 
-	@Override
-	public String toString() {
-		return "UnaryOperation [expr=" + expr + ", type="
-				+ type + "]";
-	}
 	
-	/* Serialization code */
-	static {
-		ASTNodeSerdesPlan plan = ASTNodeSerdes.newPlan(UnaryOperation.class);
-		plan.addEnumParam(0, "type", false, Type.class);
-		plan.addNodeParam(1, "expression", false);
-	}
 }

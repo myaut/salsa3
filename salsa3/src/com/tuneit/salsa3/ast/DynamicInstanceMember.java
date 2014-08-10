@@ -3,8 +3,27 @@ package com.tuneit.salsa3.ast;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdes;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesPlan;
 
+import com.tuneit.salsa3.ast.serdes.annotations.NodeParameter;
+import com.tuneit.salsa3.ast.serdes.annotations.Parameter;
+
+
+/**
+ * <strong>DynamicInstanceMember</strong> is an AST node 
+ * <ul>
+ *   <li> instance -- 
+ *   <li> memberExpression -- 
+ * </ul>
+ * 
+ * @author Sergey Klyaus
+ */
 public class DynamicInstanceMember extends ASTNode {
+
+	@Parameter(offset = 0, optional = false)
+	@NodeParameter
 	private ASTNode instance;
+
+	@Parameter(offset = 1, optional = false)
+	@NodeParameter
 	private ASTNode memberExpression;
 	
 	public DynamicInstanceMember(ASTNode instance, ASTNode memberExpression) {
@@ -28,10 +47,4 @@ public class DynamicInstanceMember extends ASTNode {
 		return memberExpression;
 	}
 	
-	/* Serialization code */
-	static {
-		ASTNodeSerdesPlan plan = ASTNodeSerdes.newPlan(DynamicInstanceMember.class);
-		plan.addNodeParam(0, "instance", false);
-		plan.addNodeParam(1, "memberExpression", false);
-	}
 }

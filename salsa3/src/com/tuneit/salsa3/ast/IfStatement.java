@@ -10,7 +10,28 @@ import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesException;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesPlan;
 import com.tuneit.salsa3.ast.serdes.ASTStatementSerializer;
 
+
+
+/**
+ * <strong>IfStatement</strong> is an AST compound statement 
+ * <ul>
+ *   <li> branches -- 
+ *   <li> currentBranch -- 
+ *   <li> elseBranch -- 
+ * </ul>
+ * 
+ * @author Sergey Klyaus
+ */
 public class IfStatement extends ASTStatement {
+	
+	/**
+	 * <strong>Branch</strong> is an AST compound statement 
+	 * <ul>
+	 *   <li> condition -- 
+	 * </ul>
+	 * 
+	 * @author Sergey Klyaus
+	 */
 	public static class Branch extends ASTStatement {
 		public ASTNode condition;
 		
@@ -19,10 +40,6 @@ public class IfStatement extends ASTStatement {
 			condition = null;
 		}
 		
-		/* Serialization code */
-		static {
-			ASTNodeSerdesPlan plan = ASTNodeSerdes.newPlan(Branch.class);
-		}
 	};
 	
 	private List<Branch> branches;
@@ -91,13 +108,5 @@ public class IfStatement extends ASTStatement {
 		return ifStatement;
 	}
 	
-	@Override
-	public String toString() {
-		return "IfStatement";
-	}
 	
-	/* Serialization code */
-	static {
-		ASTNodeSerdesPlan plan = ASTNodeSerdes.newPlan(IfStatement.class);
-	}	
 }

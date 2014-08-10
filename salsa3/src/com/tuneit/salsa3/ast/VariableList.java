@@ -6,7 +6,24 @@ import java.util.List;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdes;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesPlan;
 
+import com.tuneit.salsa3.ast.serdes.annotations.ListParameter;
+import com.tuneit.salsa3.ast.serdes.annotations.NodeParameter;
+import com.tuneit.salsa3.ast.serdes.annotations.Parameter;
+
+
+/**
+ * <strong>VariableList</strong> is an AST node 
+ * <ul>
+ *   <li> variables -- 
+ * </ul>
+ * 
+ * @author Sergey Klyaus
+ */
 public class VariableList extends ASTNode {
+
+	@Parameter(offset = 0, optional = false)
+	@ListParameter
+	@NodeParameter
 	private List<ASTNode> variables;
 	
 	public VariableList() {
@@ -27,9 +44,4 @@ public class VariableList extends ASTNode {
 		variables.add(variable);
 	}
 	
-	/* Serialization code */
-	static {
-		ASTNodeSerdesPlan plan = ASTNodeSerdes.newPlan(VariableList.class);
-		plan.addNodeListParam(0, "variables", false);
-	}	
 }

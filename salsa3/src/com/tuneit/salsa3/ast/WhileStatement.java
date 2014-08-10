@@ -3,7 +3,22 @@ package com.tuneit.salsa3.ast;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdes;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesPlan;
 
+import com.tuneit.salsa3.ast.serdes.annotations.NodeParameter;
+import com.tuneit.salsa3.ast.serdes.annotations.Parameter;
+
+
+/**
+ * <strong>WhileStatement</strong> is an AST compound statement 
+ * <ul>
+ *   <li> condition -- 
+ * </ul>
+ * 
+ * @author Sergey Klyaus
+ */
 public class WhileStatement extends ASTStatement {
+
+	@Parameter(offset = 0, optional = false)
+	@NodeParameter
 	private ASTNode condition;
 	
 	public WhileStatement(ASTNode condition) {
@@ -16,13 +31,5 @@ public class WhileStatement extends ASTStatement {
 		return condition;
 	}
 	
-	@Override
-	public String toString() {
-		return "While [" + condition + "]";
-	}
 	
-	static {
-		ASTNodeSerdesPlan plan = ASTNodeSerdes.newPlan(WhileStatement.class);
-		plan.addNodeParam(0, "condition", false);
-	}
 }

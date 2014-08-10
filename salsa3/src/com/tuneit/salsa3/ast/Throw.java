@@ -3,7 +3,22 @@ package com.tuneit.salsa3.ast;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdes;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesPlan;
 
+import com.tuneit.salsa3.ast.serdes.annotations.NodeParameter;
+import com.tuneit.salsa3.ast.serdes.annotations.Parameter;
+
+
+/**
+ * <strong>Throw</strong> is an AST node 
+ * <ul>
+ *   <li> object -- 
+ * </ul>
+ * 
+ * @author Sergey Klyaus
+ */
 public class Throw extends ASTNode {
+
+	@Parameter(offset = 0, optional = false)
+	@NodeParameter
 	private ASTNode object;
 	
 	public Throw(ASTNode object) {
@@ -17,14 +32,5 @@ public class Throw extends ASTNode {
 		return object;
 	}
 
-	@Override
-	public String toString() {
-		return "Throw [object=" + object + "]";
-	}
 	
-	/* Serialization code */
-	static {
-		ASTNodeSerdesPlan plan = ASTNodeSerdes.newPlan(Throw.class);
-		plan.addNodeParam(0, "object", false);
-	}
 }

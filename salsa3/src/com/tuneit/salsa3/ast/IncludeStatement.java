@@ -3,8 +3,26 @@ package com.tuneit.salsa3.ast;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdes;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesPlan;
 
+import com.tuneit.salsa3.ast.serdes.annotations.NodeParameter;
+import com.tuneit.salsa3.ast.serdes.annotations.Parameter;
+
+
+/**
+ * <strong>IncludeStatement</strong> is an AST node 
+ * <ul>
+ *   <li> includePath -- 
+ *   <li> isOnce -- 
+ * </ul>
+ * 
+ * @author Sergey Klyaus
+ */
 public class IncludeStatement extends ASTNode {
+
+	@Parameter(offset = 0, optional = false)
+	@NodeParameter
 	private ASTNode includePath;	
+
+	@Parameter(offset = 1, optional = false)
 	private boolean isOnce;
 	
 	public IncludeStatement(ASTNode includePath, Boolean isOnce) {
@@ -25,16 +43,5 @@ public class IncludeStatement extends ASTNode {
 		return isOnce;
 	}
 
-	@Override
-	public String toString() {
-		return "IncludeStatement [includePath=" + includePath + ", isOnce="
-				+ isOnce + "]";
-	}
 	
-	/* Serialization code */
-	static {
-		ASTNodeSerdesPlan plan = ASTNodeSerdes.newPlan(IncludeStatement.class);
-		plan.addNodeParam(0, "includePath", false);
-		plan.addBooleanParam(1, "isOnce", false);
-	}
 }

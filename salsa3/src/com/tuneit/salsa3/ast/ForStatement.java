@@ -9,7 +9,25 @@ import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesException;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesPlan;
 import com.tuneit.salsa3.ast.serdes.ASTStatementSerializer;
 
+import com.tuneit.salsa3.ast.serdes.annotations.NodeParameter;
+import com.tuneit.salsa3.ast.serdes.annotations.Parameter;
+
+
+/**
+ * <strong>ForStatement</strong> is an AST compound statement 
+ * <ul>
+ *   <li> condition -- 
+ *   <li> initializationStatement -- 
+ *   <li> incrementStatement -- 
+ *   <li> currentStatement -- 
+ * </ul>
+ * 
+ * @author Sergey Klyaus
+ */
 public class ForStatement extends ASTStatement {
+
+	@Parameter(offset = 0, optional = false)
+	@NodeParameter
 	private ASTNode condition;
 	
 	private ASTStatement initializationStatement;
@@ -80,10 +98,6 @@ public class ForStatement extends ASTStatement {
 		return forStatement;
 	}
 	
-	@Override
-	public String toString() {
-		return "For [" + condition + "]";
-	}
 	
 	@Override
 	public void deserializeState(String state, ASTNode node) throws ASTNodeSerdesException {
@@ -101,9 +115,4 @@ public class ForStatement extends ASTStatement {
 		}
 	}
 	
-	/* Serialization code */
-	static {
-		ASTNodeSerdesPlan plan = ASTNodeSerdes.newPlan(ForStatement.class);
-		plan.addNodeParam(0, "condition", false);
-	}
 }

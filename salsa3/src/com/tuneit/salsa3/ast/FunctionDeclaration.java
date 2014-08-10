@@ -7,12 +7,40 @@ import com.tuneit.salsa3.ast.FunctionCall.Argument;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdes;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesPlan;
 
+import com.tuneit.salsa3.ast.serdes.annotations.ListParameter;
+import com.tuneit.salsa3.ast.serdes.annotations.NodeParameter;
+import com.tuneit.salsa3.ast.serdes.annotations.Parameter;
+
+
+/**
+ * <strong>FunctionDeclaration</strong> is an AST compound statement 
+ * <ul>
+ *   <li> functionName -- 
+ *   <li> returnType -- 
+ *   <li> functionDeclarators -- 
+ *   <li> arguments -- 
+ * </ul>
+ * 
+ * @author Sergey Klyaus
+ */
 public class FunctionDeclaration extends ASTStatement {
+
+	@Parameter(offset = 0, optional = false)
 	private String functionName;
 	
+
+	@Parameter(offset = 1, optional = false)
+	@NodeParameter
 	private TypeName returnType;
+
+	@Parameter(offset = 2, optional = false)
+	@ListParameter
 	private List<String> functionDeclarators;
 	
+
+	@Parameter(offset = 3, optional = false)
+	@ListParameter
+	@NodeParameter
 	private List<ASTNode> arguments;
 	
 	public FunctionDeclaration(String functionName, ASTNode returnType) {
@@ -66,31 +94,10 @@ public class FunctionDeclaration extends ASTStatement {
 		return arguments;
 	}
 	
-	@Override
-	public String toString() {
-		StringBuilder sb = new StringBuilder();
 		
-		sb.append("FunctionDeclaration [name=");
-		sb.append(functionName);
 		
-		sb.append(", args=[");
 		
-		for(ASTNode argument : arguments) {
-			sb.append(argument.toString());			
-			sb.append(", ");
-		}
 		
-		sb.append("]]");
 		
-		return sb.toString();
-	}
 	
-	/* Serialization code */
-	static {
-		ASTNodeSerdesPlan plan = ASTNodeSerdes.newPlan(FunctionDeclaration.class);
-		plan.addStringParam(0, "functionName", false);
-		plan.addNodeParam(1, "returnType", false);
-		plan.addStringListParam(2, "functionDeclarators", false);
-		plan.addNodeListParam(3, "arguments", false);
-	}
 }
