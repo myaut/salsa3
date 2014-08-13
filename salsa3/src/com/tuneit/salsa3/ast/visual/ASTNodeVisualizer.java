@@ -1,8 +1,5 @@
 package com.tuneit.salsa3.ast.visual;
 
-import java.util.List;
-
-import com.tuneit.salsa3.ast.Literal;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesException;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerializer;
 

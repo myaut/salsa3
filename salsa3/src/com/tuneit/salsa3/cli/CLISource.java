@@ -37,8 +37,6 @@ import com.tuneit.salsa3.ast.ClassDeclaration.Type;
 import com.tuneit.salsa3.PHPParser;
 import com.tuneit.salsa3.ParserException;
 
-import static com.tuneit.salsa3.ast.ClassDeclaration.*;
-
 @Component
 public class CLISource implements CommandMarker {
 	private static final Type classTypeCriteria[][] = {

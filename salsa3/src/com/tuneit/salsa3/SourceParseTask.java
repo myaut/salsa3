@@ -6,7 +6,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.tuneit.salsa3.ast.ASTStatement;
-import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesException;
 import com.tuneit.salsa3.model.Repository;
 import com.tuneit.salsa3.model.Source;
 

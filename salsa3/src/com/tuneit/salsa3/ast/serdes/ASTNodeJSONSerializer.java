@@ -4,8 +4,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONArray;
 
-import com.tuneit.salsa3.ast.Literal;
-
 public class ASTNodeJSONSerializer implements ASTNodeSerializer {
 	public static String ASTTYPE_NAME = "_t";
 	

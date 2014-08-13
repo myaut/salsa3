@@ -7,8 +7,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONArray;
 
-import com.tuneit.salsa3.ast.Literal;
-
 public class ASTNodeJSONDeserializer implements ASTNodeDeserializer {
 	public class JSONNodeIterator implements Iterator<Object> {
 		private JSONArray list;

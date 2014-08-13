@@ -4,7 +4,6 @@ import com.tuneit.salsa3.ast.ASTNode;
 import com.tuneit.salsa3.ast.ASTStatement;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdes;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesException;
-import com.tuneit.salsa3.ast.serdes.ASTStatementSerdes;
 import com.tuneit.salsa3.ast.serdes.ASTStatementSerializer;
 
 public class ASTStatementVisualizer implements ASTStatementSerializer {

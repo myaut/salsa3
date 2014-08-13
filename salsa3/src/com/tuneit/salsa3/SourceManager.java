@@ -12,11 +12,10 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.NoResultException;
 import javax.persistence.Persistence;
 import javax.persistence.Query;
-import javax.persistence.criteria.Join;
+
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaDelete;
-import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Predicate;
 
 import com.tuneit.salsa3.model.*;

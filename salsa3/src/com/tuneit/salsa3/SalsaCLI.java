@@ -105,7 +105,7 @@ public final class SalsaCLI {
 				@Override
 				public void run() {
 					EntityManagerFactory emf = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME);
-					EntityManager em = emf.createEntityManager();
+					emf.createEntityManager();
 				}
 			}).start();
 			

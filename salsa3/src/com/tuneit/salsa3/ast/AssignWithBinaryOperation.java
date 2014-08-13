@@ -1,11 +1,5 @@
 package com.tuneit.salsa3.ast;
 
-import com.tuneit.salsa3.ast.BinaryOperation.Type;
-import com.tuneit.salsa3.ast.serdes.ASTNodeSerdes;
-import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesPlan;
-
-
-
 /**
  * <strong>AssignWithBinaryOperation</strong> is an AST  
  * 

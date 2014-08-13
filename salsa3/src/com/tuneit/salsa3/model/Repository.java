@@ -2,8 +2,6 @@ package com.tuneit.salsa3.model;
 
 import javax.persistence.*;
 
-import java.util.List;
-
 @Entity
 public class Repository {
 	@Id

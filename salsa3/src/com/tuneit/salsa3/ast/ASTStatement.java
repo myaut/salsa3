@@ -1,12 +1,8 @@
 package com.tuneit.salsa3.ast;
 
-import java.io.OutputStream;
-import java.io.PrintStream;
 import java.util.ArrayList;
 
-import com.tuneit.salsa3.ast.serdes.ASTNodeSerdes;
 import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesException;
-import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesPlan;
 import com.tuneit.salsa3.ast.serdes.ASTStatementSerializer;
 
 

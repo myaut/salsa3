@@ -1,6 +1,5 @@
 package com.tuneit.salsa3.ast.serdes;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;

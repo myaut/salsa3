@@ -1,8 +1,5 @@
 package com.tuneit.salsa3.ast;
 
-import com.tuneit.salsa3.ast.serdes.ASTNodeSerdes;
-import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesPlan;
-
 import com.tuneit.salsa3.ast.serdes.annotations.Parameter;
 import com.tuneit.salsa3.ast.serdes.annotations.EnumParameter;
 
@@ -51,46 +48,4 @@ public class Literal extends ASTNode {
 	public Type getType() {
 		return type;
 	}
-
-	
-	private String getEscapedToken() {
-		StringBuilder sb = new StringBuilder();
-		
-		for(int i = 0; i < token.length(); ++i) {
-			char c = token.charAt(i);
-			
-			switch(c) {
-			case '\n':
-				sb.append("\\n");
-				break;
-			case '\t':
-				sb.append("\\t");
-				break;
-			case '\r':
-				sb.append("\\r");
-				break;
-			case '\f':
-				sb.append("\\f");
-				break;
-			case '\b':
-				sb.append("\\b");
-				break;
-			case '\\':
-				sb.append("\\\\");
-				break;
-			case '"':
-				sb.append("\\\"");
-				break;
-			case '\'':
-				sb.append("\\\'");
-				break;
-			default:
-				sb.append(c);
-				break;
-			}
-		}
-		
-		return sb.toString();
-	}
-	
 }

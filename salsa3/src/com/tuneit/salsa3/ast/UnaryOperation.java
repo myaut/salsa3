@@ -1,9 +1,5 @@
 package com.tuneit.salsa3.ast;
 
-import com.tuneit.salsa3.ast.BinaryOperation.Type;
-import com.tuneit.salsa3.ast.serdes.ASTNodeSerdes;
-import com.tuneit.salsa3.ast.serdes.ASTNodeSerdesPlan;
-
 import com.tuneit.salsa3.ast.serdes.annotations.NodeParameter;
 import com.tuneit.salsa3.ast.serdes.annotations.Parameter;
 import com.tuneit.salsa3.ast.serdes.annotations.EnumParameter;
