@@ -178,11 +178,12 @@ public final class PHPParser implements SourceParser {
 					}
 				}
 			}
-			else if(node instanceof Assign) {
+			else if(node.getClass().equals(Assign.class)) {
 				Assign assign = (Assign) node;
 				ASTNode left = assign.getLeft();
+				ASTNode right = assign.getRight();
 				
-				if(left instanceof Variable) {
+				if(left instanceof Variable && right instanceof Literal) {
 					Variable variable = (Variable) left;
 					newRoot.addChild(new VariableDeclaration(variable, 
 							new TypeName("mixed"), assign.getRight()));
@@ -199,3 +200,4 @@ public final class PHPParser implements SourceParser {
 		return newRoot;
 	}
 }
+

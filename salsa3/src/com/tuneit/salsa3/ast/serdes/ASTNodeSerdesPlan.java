@@ -194,12 +194,22 @@ public class ASTNodeSerdesPlan {
 		int beginIndex = className.lastIndexOf('.');
 		nodeClassName = className.substring(beginIndex + 1);
 		
-		generatePlan();
+		Class<?> klass = nodeClass;
+		
+		while(!klass.equals(ASTNode.class)) {
+			generatePlan(klass.getDeclaredFields());
+			klass = klass.getSuperclass();
+			
+			if(klass.equals(Object.class)) {
+				throw new IllegalArgumentException("Couldn't generate plan for '" + 
+							nodeClass.getName() + "'");
+			}
+		}
 	}
 	
 	@SuppressWarnings("rawtypes")
-	private void generatePlan() {
-		for(Field field : nodeClass.getDeclaredFields()) {			
+	private void generatePlan(Field[] fields) {
+		for(Field field : fields) {			
 			if(!field.isAnnotationPresent(Parameter.class)) {
 				continue;
 			}
@@ -296,19 +306,19 @@ public class ASTNodeSerdesPlan {
 				
 				serializer.addToNode(serializedNode, param.getName(), param.getShortName(), param.serialize(serializer, o));
 			} catch (SecurityException e) {
-				throw new ASTNodeSerdesException("Security exception for getter" + getterName + 
+				throw new ASTNodeSerdesException("Security exception for getter " + getterName + 
 								" from class" + nodeClassName, e);
 			} catch (IllegalAccessException e) {
 				throw new ASTNodeSerdesException("Getter " + getterName + 
-								"has invalid rights in class" + nodeClassName, e);
+								" has invalid rights in class " + nodeClassName, e);
 			} catch (IllegalArgumentException e) {
 				throw new ASTNodeSerdesException("Getter " + getterName + 
-								"got invalid argument in class" + nodeClassName, e);
+								" got invalid argument in class " + nodeClassName, e);
 			} catch (InvocationTargetException e) {
 				throw new ASTNodeSerdesException("Getter " + getterName + 
-								"invokation error in class" + nodeClassName, e);
+								" invokation error in class " + nodeClassName, e);
 			} catch (ClassCastException e) {
-				throw new ASTNodeSerdesException("Unexpected class of parameter for class" + 
+				throw new ASTNodeSerdesException("Unexpected class of parameter for class " + 
 						nodeClassName, e);
 			}
 		}

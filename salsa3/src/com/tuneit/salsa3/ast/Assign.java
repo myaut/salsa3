@@ -31,7 +31,11 @@ public class Assign extends ASTNode {
 		left.reuseInExpression(this);
 		right.reuseInExpression(this);
 	}
-
+	
+	public ASTNode clone() {
+		return new Assign(left, right);
+	}
+	
 	public ASTNode getLeft() {
 		return left;
 	}

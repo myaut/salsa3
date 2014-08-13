@@ -53,6 +53,12 @@ public class PHPExpressionHelper {
 		if(state.isState("binary_op")) {
 			return PHPExpressionHelper.handleBinaryOperation(state, handler);
 		}
+		else if(state.isState("assign")) {
+			return PHPExpressionHelper.handleAssign(state, handler);
+		}
+		else if(state.isState("assign_ref")) {
+			return PHPExpressionHelper.handleAssignRef(state, handler);
+		}
 		else if(state.isState("boolean_and_end")) {
 			return PHPExpressionHelper.handleBooleanOperation(state, handler, BinaryOperation.Type.BOP_LOGICAL_AND);
 		}
@@ -184,6 +190,32 @@ public class PHPExpressionHelper {
 		int bopType = state.getIntParam("op");
 		
 		handleBinaryOperationHelper(getBinaryOpType(bopType), result, op1, op2);
+		
+		return handler;
+	}
+	
+	private static PHPParserHandler handleAssign(PHPParserState state, PHPParserHandler handler) throws ParserException {
+		ASTNode value = state.getNode("value");
+		ASTNode variable = state.getNode("variable");
+		ASTNode result = state.getNode("result");
+		
+		Assign assign = new Assign(variable, value);
+		
+		addChildToHandler(assign, handler);
+		result.setNode(assign);
+		
+		return handler;
+	}
+	
+	private static PHPParserHandler handleAssignRef(PHPParserState state, PHPParserHandler handler) throws ParserException {
+		ASTNode value = state.getNode("rvar");
+		ASTNode variable = state.getNode("lvar");
+		ASTNode result = state.getNode("result");
+		
+		Assign assign = new Assign(variable, new TakeReference(value));
+		
+		addChildToHandler(assign, handler);
+		result.setNode(assign);
 		
 		return handler;
 	}

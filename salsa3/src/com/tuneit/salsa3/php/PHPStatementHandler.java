@@ -39,20 +39,6 @@ public class PHPStatementHandler implements PHPParserHandler {
 		else if(state.isState("unset")) {
 			return this.handleUnset(state);
 		}
-		else if(state.isState("assign")) {
-			/* SALSA considers assign and binary_assign_op as statement. Despite the fact
-			 * they may be used in expression context, i.e:
-			 * 		f($a = 1)
-			 * It would nicely split into two statements:
-			 * 		$a = 1
-			 * 		f($a)
-			 * which is equivalent to upper example. This may be hacked like function calls did,
-			 * but this approach is easier. */
-			return this.handleAssign(state);
-		}
-		else if(state.isState("assign_ref")) {
-			return this.handleAssignRef(state);
-		}
 		else if(state.isState("declare_constant")) {
 			return this.handleConstant(state);
 		}
@@ -134,27 +120,7 @@ public class PHPStatementHandler implements PHPParserHandler {
 		rootNode.addChild(fcall);
 		
 		return this;
-	}
-	
-	public PHPParserHandler handleAssign(PHPParserState state) throws ParserException {
-		ASTNode value = state.getNode("value");
-		ASTNode variable = state.getNode("variable");
-		
-		Assign assign = new Assign(variable, value);
-		rootNode.addChild(assign);
-		
-		return this;
-	}
-	
-	public PHPParserHandler handleAssignRef(PHPParserState state) throws ParserException {
-		ASTNode value = state.getNode("rvar");
-		ASTNode variable = state.getNode("lvar");
-		
-		Assign assign = new Assign(variable, new TakeReference(value));
-		rootNode.addChild(assign);
-		
-		return this;
-	}
+	}	
 	
 	public PHPParserHandler handleConstant(PHPParserState state) throws ParserException {
 		Literal nameNode = (Literal) state.getNode("name");
@@ -176,8 +142,8 @@ public class PHPStatementHandler implements PHPParserHandler {
 		ASTNode variable = state.getNode("op1");
 		
 		AssignWithBinaryOperation assign = 
-				new AssignWithBinaryOperation(PHPStatementHandler.getAssignBinaryOpType(op), 
-											  variable, value);
+				new AssignWithBinaryOperation(variable, value,
+											  PHPStatementHandler.getAssignBinaryOpType(op));
 		rootNode.addChild(assign);
 		
 		return this;
